@@ -98,11 +98,23 @@ class RateLimiter:
         return True
 
 
+def default_share_dir() -> Path:
+    """The 'share' folder next to kuft.py, wherever the script was run from.
+
+    Resolving the default against the current directory instead would quietly
+    create and serve an empty folder whenever the script is launched from
+    somewhere else -- and the tour already promises the folder 'next to this
+    script'.  An explicit --share still resolves the ordinary way, so a
+    relative one is relative to where the user is standing.
+    """
+    return Path(__file__).resolve().parents[2] / "share"
+
+
 class Config:
     def __init__(self, args: argparse.Namespace, identity: ServerIdentity):
         self.host: str = args.host
         self.port: int = args.port
-        self.jail = Jail(Path(args.share))
+        self.jail = Jail(Path(args.share) if args.share else default_share_dir())
         self.read_only: bool = args.read_only
         self.max_clients: int = args.max_clients
         self.rate_limit: int = args.rate_limit
@@ -647,7 +659,11 @@ def build_parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--host", default="0.0.0.0", help="interface to bind (default: all)")
     parser.add_argument("--port", type=int, default=DEFAULT_PORT)
-    parser.add_argument("--share", default="share", help="directory to share")
+    parser.add_argument(
+        "--share",
+        default=None,
+        help="directory to share (default: the 'share' folder next to kuft.py)",
+    )
     parser.add_argument("--read-only", action="store_true", help="refuse PUT/DELETE/MKDIR/MOVE")
     parser.add_argument("--max-clients", type=int, default=DEFAULT_MAX_CLIENTS)
     parser.add_argument(

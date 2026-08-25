@@ -870,5 +870,57 @@ class InterruptTests(unittest.TestCase):
             listener.close()
 
 
+# ------------------------------------------------------------ share default
+
+
+class ShareDefaultTests(unittest.TestCase):
+    """The default share directory follows kuft.py, not the current directory.
+
+    Resolving it against the current directory meant launching the script from
+    anywhere else silently created and served an empty folder there, while the
+    tour promised the folder 'next to this script'.
+    """
+
+    def test_default_is_next_to_kuft_py(self):
+        root = Path(__file__).resolve().parents[1]
+        self.assertEqual(server_mod.default_share_dir(), root / "share")
+
+    def test_default_ignores_the_current_directory(self):
+        saved = os.getcwd()
+        with tempfile.TemporaryDirectory() as tmp:
+            os.chdir(tmp)
+            try:
+                self.assertEqual(
+                    server_mod.default_share_dir(),
+                    Path(__file__).resolve().parents[1] / "share",
+                )
+                self.assertFalse(
+                    (Path(tmp) / "share").exists(),
+                    "asking for the default must not create a stray share folder",
+                )
+            finally:
+                os.chdir(saved)
+
+    def test_parser_leaves_share_unset_so_the_default_can_apply(self):
+        args = server_mod.build_parser().parse_args([])
+        self.assertIsNone(args.share)
+
+    def test_explicit_relative_share_is_taken_from_the_current_directory(self):
+        saved = os.getcwd()
+        with tempfile.TemporaryDirectory() as tmp:
+            os.chdir(tmp)
+            try:
+                args = server_mod.build_parser().parse_args(["--share", "mystuff"])
+                cfg = server_mod.Config(args, crypto.ServerIdentity.load_or_create())
+                self.assertEqual(cfg.jail.root, Path(tmp).resolve() / "mystuff")
+            finally:
+                os.chdir(saved)
+
+    def test_unset_share_serves_the_folder_beside_the_script(self):
+        args = server_mod.build_parser().parse_args([])
+        cfg = server_mod.Config(args, crypto.ServerIdentity.load_or_create())
+        self.assertEqual(cfg.jail.root, server_mod.default_share_dir().resolve())
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

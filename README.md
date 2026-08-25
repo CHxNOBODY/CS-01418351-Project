@@ -26,8 +26,8 @@ a terminal. No cloud, no account, no USB stick. Two commands.
 python kuft.py serve
 ```
 
-Put whatever you want to send into the `share` folder. The server prints an
-address and a pairing code:
+Put whatever you want to send into the `share` folder next to `kuft.py`. The
+server prints an address and a pairing code:
 
 ```
 +----------------------------------------------------------------+
@@ -150,7 +150,7 @@ python kuft.py forget HOST         un-pin a server
 | --- | --- | --- |
 | `--host` | `0.0.0.0` | Interface to bind. `0.0.0.0` accepts other machines. |
 | `--port` | `5150` | TCP port. |
-| `--share` | `./share` | Directory to serve. Nothing outside it is reachable. |
+| `--share` | `share/` next to `kuft.py` | Directory to serve. A relative path is taken from the current directory. Nothing outside it is reachable. |
 | `--read-only` | off | Refuse `PUT`, `DELETE`, `MKDIR`, `MOVE`. |
 | `--max-clients` | `8` | Concurrent sessions before new ones get `503`. |
 | `--rate-limit` | `0` (off) | Requests per 10 s per connection before `429`. |
