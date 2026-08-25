@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+*.part
+.kuft/
+downloads/*
+!downloads/.gitkeep

@@ -1,0 +1,8 @@
+Encoding check -- these must survive the trip byte for byte.
+
+Thai      สวัสดีชาวโลก
+Japanese  こんにちは世界
+Greek     Καλημέρα κόσμε
+Emoji     ok -> 🎉 🚀 🔒
+Maths     ∑ ∞ ≈ ± √2 ≈ 1.41421
+Quotes    “curly” and ‘single’ and an em--dash — here
