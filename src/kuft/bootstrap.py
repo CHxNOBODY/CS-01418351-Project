@@ -90,8 +90,103 @@ def ensure_dependencies(argv: list[str]) -> None:
         # We already tried this once; a loop would be worse than an error.
         _explain_and_exit()
 
-    completed = subprocess.run([str(interpreter), str(script), *argv], env=env)
-    raise SystemExit(completed.returncode)
+    child = subprocess.Popen([str(interpreter), str(script), *argv], env=env)
+    _tie_lifetime_to_ours(child.pid)
+    try:
+        raise SystemExit(child.wait())
+    except KeyboardInterrupt:
+        # In a real console the Ctrl+C reached the child as well, so give it a
+        # moment to shut down on its own terms before insisting.
+        try:
+            code = child.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            child.terminate()
+            code = child.wait()
+        raise SystemExit(code) from None
+
+
+# The job handle has to outlive this function: Windows kills the job when its
+# last handle closes, which is exactly the guarantee we want at exit.
+_JOB_HANDLE = None
+
+
+def _tie_lifetime_to_ours(pid: int) -> None:
+    """Make the child die with us, so an interrupt cannot orphan the server.
+
+    The launcher and the interpreter it hands off to are two processes.  When
+    an interrupt reaches only the launcher -- which is what happens in
+    terminals that deliver a POSIX signal instead of a console control event --
+    the server carries on running invisibly and keeps the port bound, so the
+    next ``serve`` fails with 'cannot bind'.  A job object with
+    KILL_ON_JOB_CLOSE ties the two together for every exit path, including a
+    hard kill of the launcher.
+    """
+    global _JOB_HANDLE
+    if os.name != "nt":
+        return
+    try:
+        import ctypes
+        from ctypes import wintypes
+
+        kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+        kernel32.CreateJobObjectW.restype = wintypes.HANDLE
+        kernel32.OpenProcess.restype = wintypes.HANDLE
+        kernel32.OpenProcess.argtypes = [wintypes.DWORD, wintypes.BOOL, wintypes.DWORD]
+        kernel32.AssignProcessToJobObject.argtypes = [wintypes.HANDLE, wintypes.HANDLE]
+        kernel32.CloseHandle.argtypes = [wintypes.HANDLE]
+
+        class _BasicLimits(ctypes.Structure):
+            _fields_ = [
+                ("PerProcessUserTimeLimit", ctypes.c_int64),
+                ("PerJobUserTimeLimit", ctypes.c_int64),
+                ("LimitFlags", wintypes.DWORD),
+                ("MinimumWorkingSetSize", ctypes.c_size_t),
+                ("MaximumWorkingSetSize", ctypes.c_size_t),
+                ("ActiveProcessLimit", wintypes.DWORD),
+                ("Affinity", ctypes.c_size_t),
+                ("PriorityClass", wintypes.DWORD),
+                ("SchedulingClass", wintypes.DWORD),
+            ]
+
+        class _IoCounters(ctypes.Structure):
+            _fields_ = [(name, ctypes.c_uint64) for name in (
+                "ReadOperationCount", "WriteOperationCount", "OtherOperationCount",
+                "ReadTransferCount", "WriteTransferCount", "OtherTransferCount",
+            )]
+
+        class _ExtendedLimits(ctypes.Structure):
+            _fields_ = [
+                ("BasicLimitInformation", _BasicLimits),
+                ("IoInfo", _IoCounters),
+                ("ProcessMemoryLimit", ctypes.c_size_t),
+                ("JobMemoryLimit", ctypes.c_size_t),
+                ("PeakProcessMemoryUsed", ctypes.c_size_t),
+                ("PeakJobMemoryUsed", ctypes.c_size_t),
+            ]
+
+        job = kernel32.CreateJobObjectW(None, None)
+        if not job:
+            return
+        limits = _ExtendedLimits()
+        limits.BasicLimitInformation.LimitFlags = 0x2000  # KILL_ON_JOB_CLOSE
+        if not kernel32.SetInformationJobObject(
+            job, 9, ctypes.byref(limits), ctypes.sizeof(limits)
+        ):
+            kernel32.CloseHandle(job)
+            return
+        handle = kernel32.OpenProcess(0x0100 | 0x0001, False, pid)  # SET_QUOTA|TERMINATE
+        if not handle:
+            kernel32.CloseHandle(job)
+            return
+        assigned = kernel32.AssignProcessToJobObject(job, handle)
+        kernel32.CloseHandle(handle)
+        if not assigned:
+            kernel32.CloseHandle(job)
+            return
+        _JOB_HANDLE = job
+    except Exception:
+        # Losing the safety net is not worth refusing to run over.
+        return
 
 
 def _explain_and_exit() -> None:

@@ -20,6 +20,7 @@ import os
 import socket
 import sys
 import tempfile
+import types
 import threading
 import time
 import unittest
@@ -32,7 +33,7 @@ os.environ.setdefault("KUFT_NO_REEXEC", "1")
 _TEST_HOME = tempfile.mkdtemp(prefix="kuft-test-home-")
 os.environ["KUFT_HOME"] = _TEST_HOME
 
-from kuft import crypto, protocol, server as server_mod  # noqa: E402
+from kuft import crypto, protocol, server as server_mod, term  # noqa: E402
 from kuft.client import Client, FingerprintChanged, TransferError  # noqa: E402
 from kuft.protocol import ProtocolError, Reader, Request, Response, Writer  # noqa: E402
 
@@ -243,6 +244,114 @@ class CryptoTests(unittest.TestCase):
     def test_fingerprint_formatting_is_readable(self):
         pretty = crypto.format_fingerprint(b"\x07" * 32)
         self.assertEqual(len(pretty.split("-")), 6)
+
+
+# --------------------------------------------------------------- code prompt
+
+
+class SecretPromptTests(unittest.TestCase):
+    """The pairing-code prompt has to work in every terminal, not just conhost.
+
+    ``getpass`` reads the Windows console device directly and ignores stdin,
+    so under mintty, Git Bash or an IDE terminal it waits forever for
+    keystrokes that cannot arrive.  These pin down both halves of the
+    replacement: the masked reader, and the fallback that keeps a terminal
+    without a console usable.
+    """
+
+    def _masked(self, keys):
+        """Run the masked reader against a scripted keyboard."""
+        fake = types.ModuleType("msvcrt")
+        pending = iter(keys)
+        fake.getwch = lambda: next(pending)
+        screen = io.StringIO()
+        saved_msvcrt = sys.modules.get("msvcrt")
+        saved_stdout = sys.stdout
+        sys.modules["msvcrt"] = fake
+        sys.stdout = screen
+        try:
+            return term._read_masked_windows("code: "), screen.getvalue()
+        finally:
+            sys.stdout = saved_stdout
+            if saved_msvcrt is None:
+                sys.modules.pop("msvcrt", None)
+            else:
+                sys.modules["msvcrt"] = saved_msvcrt
+
+    def test_masked_read_returns_what_was_typed(self):
+        value, screen = self._masked(list("6AOS-OUBQ-TCLO") + ["\r"])
+        self.assertEqual(value, "6AOS-OUBQ-TCLO")
+        self.assertNotIn("6AOS", screen)
+
+    def test_masked_read_echoes_one_star_per_character(self):
+        _, screen = self._masked(list("ABC") + ["\r"])
+        self.assertEqual(screen.count("*"), 3)
+
+    def test_masked_read_accepts_line_feed_as_enter(self):
+        value, _ = self._masked(list("AB") + ["\n"])
+        self.assertEqual(value, "AB")
+
+    def test_masked_read_handles_backspace(self):
+        value, _ = self._masked(list("AB") + ["\b"] + list("C") + ["\r"])
+        self.assertEqual(value, "AC")
+
+    def test_backspace_on_empty_input_is_harmless(self):
+        value, _ = self._masked(["\b", "\b", "\r"])
+        self.assertEqual(value, "")
+
+    def test_arrow_and_function_keys_are_discarded(self):
+        for prefix in ("\x00", "\xe0"):
+            with self.subTest(prefix=prefix):
+                value, _ = self._masked(list("A") + [prefix, "K"] + list("B") + ["\r"])
+                self.assertEqual(value, "AB")
+
+    def test_ctrl_c_and_ctrl_z_cancel(self):
+        with self.assertRaises(KeyboardInterrupt):
+            self._masked(list("AB") + ["\x03"])
+        with self.assertRaises(EOFError):
+            self._masked(list("AB") + ["\x1a"])
+
+    def test_falls_back_to_stdin_when_no_console_is_available(self):
+        """The regression: a terminal without a console must still be typable."""
+        saved_stdin, saved_stdout = sys.stdin, sys.stdout
+        saved_probe = term.can_hide_input
+        term.can_hide_input = lambda: False
+        sys.stdin = io.StringIO("6AOS-OUBQ-TCLO\n")
+        sys.stdout = io.StringIO()
+        try:
+            self.assertEqual(term.read_secret("code: "), "6AOS-OUBQ-TCLO")
+            self.assertIn("code: ", sys.stdout.getvalue())
+        finally:
+            term.can_hide_input = saved_probe
+            sys.stdin, sys.stdout = saved_stdin, saved_stdout
+
+    def test_fallback_strips_a_windows_line_ending(self):
+        saved_stdin, saved_stdout = sys.stdin, sys.stdout
+        saved_probe = term.can_hide_input
+        term.can_hide_input = lambda: False
+        sys.stdin = io.StringIO("ABCD\r\n")
+        sys.stdout = io.StringIO()
+        try:
+            self.assertEqual(term.read_secret("code: "), "ABCD")
+        finally:
+            term.can_hide_input = saved_probe
+            sys.stdin, sys.stdout = saved_stdin, saved_stdout
+
+    def test_closed_input_raises_rather_than_hanging(self):
+        saved_stdin, saved_stdout = sys.stdin, sys.stdout
+        saved_probe = term.can_hide_input
+        term.can_hide_input = lambda: False
+        sys.stdin = io.StringIO("")
+        sys.stdout = io.StringIO()
+        try:
+            with self.assertRaises(EOFError):
+                term.read_secret("code: ")
+        finally:
+            term.can_hide_input = saved_probe
+            sys.stdin, sys.stdout = saved_stdin, saved_stdout
+
+    def test_console_probe_never_raises(self):
+        self.assertIn(term.can_hide_input(), (True, False))
 
 
 # ------------------------------------------------------------------- harness

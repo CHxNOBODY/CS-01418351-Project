@@ -108,6 +108,125 @@ def _visible_len(text: str) -> int:
     return out
 
 
+# -------------------------------------------------------------------- input
+
+
+def can_hide_input() -> bool:
+    """True when this process can really read keystrokes from a console.
+
+    On Windows ``getpass`` reads the console device (CONIN$) directly and
+    ignores stdin entirely.  That is fine under conhost or Windows Terminal,
+    but terminals that hand native programs a pipe instead of a console --
+    mintty, Git Bash, and some IDE terminals -- leave it waiting for
+    keystrokes that can never arrive, so the prompt never even appears and
+    nothing can be typed.  Asking the stdin handle for its console mode is
+    the reliable way to tell the two apart.
+    """
+    if os.name != "nt":
+        try:
+            return sys.stdin.isatty()
+        except (AttributeError, ValueError):
+            return False
+    try:
+        import ctypes
+        from ctypes import wintypes
+
+        kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+        kernel32.GetStdHandle.restype = wintypes.HANDLE
+        handle = kernel32.GetStdHandle(-10)  # STD_INPUT_HANDLE
+        if not handle or handle == wintypes.HANDLE(-1).value:
+            return False
+        mode = wintypes.DWORD()
+        return bool(kernel32.GetConsoleMode(handle, ctypes.byref(mode)))
+    except Exception:
+        return False
+
+
+_ENTER = ("\r", "\n")
+_BACKSPACE = "\b"
+_CTRL_C = "\x03"
+_CTRL_Z = "\x1a"
+_SPECIAL_PREFIX = ("\x00", "\xe0")  # arrow/function keys arrive as two reads
+
+
+def _read_masked_windows(prompt: str) -> str:
+    import msvcrt
+
+    sys.stdout.write(prompt)
+    sys.stdout.flush()
+    chars: list[str] = []
+    while True:
+        ch = msvcrt.getwch()
+        if ch in _ENTER:
+            break
+        if ch == _CTRL_C:
+            raise KeyboardInterrupt
+        if ch == _CTRL_Z:
+            raise EOFError
+        if ch in _SPECIAL_PREFIX:
+            msvcrt.getwch()  # discard the scan code that follows
+            continue
+        if ch == _BACKSPACE:
+            if chars:
+                chars.pop()
+                sys.stdout.write("\b \b")
+                sys.stdout.flush()
+            continue
+        chars.append(ch)
+        sys.stdout.write("*")
+        sys.stdout.flush()
+    sys.stdout.write("\n")
+    sys.stdout.flush()
+    return "".join(chars)
+
+
+def _read_masked_posix(prompt: str) -> str:
+    import termios
+
+    fd = sys.stdin.fileno()
+    saved = termios.tcgetattr(fd)
+    try:
+        quiet = termios.tcgetattr(fd)
+        quiet[3] &= ~termios.ECHO  # lflags
+        termios.tcsetattr(fd, termios.TCSADRAIN, quiet)
+        sys.stdout.write(prompt)
+        sys.stdout.flush()
+        line = sys.stdin.readline()
+    finally:
+        termios.tcsetattr(fd, termios.TCSADRAIN, saved)
+    sys.stdout.write("\n")
+    sys.stdout.flush()
+    if not line:
+        raise EOFError
+    return line.rstrip("\r\n")
+
+
+def read_secret(prompt: str) -> str:
+    """Read one line, hiding it where the terminal allows and always working.
+
+    This deliberately does not use ``getpass``: see ``can_hide_input``
+    for why that hangs on Windows outside a real console.  Where the keystrokes
+    can be intercepted they are echoed as asterisks -- input that leaves no mark
+    on screen reads as a frozen program, which is the complaint getpass invites.
+    Everywhere else the line is read from stdin in the clear, which every
+    terminal and every pipe can feed.
+    """
+    if can_hide_input():
+        try:
+            if os.name == "nt":
+                return _read_masked_windows(prompt)
+            return _read_masked_posix(prompt)
+        except (OSError, ImportError, ValueError):
+            pass  # fall through to a plain read rather than stranding the user
+
+    sys.stdout.write(prompt)
+    sys.stdout.flush()
+    line = sys.stdin.readline()
+    if not line:
+        raise EOFError
+    return line.rstrip("\r\n")
+
+
 def status_line(code: int, phrase_text: str, detail: str) -> None:
     """One consistent line per server reply -- the thing the marker reads."""
     if 200 <= code < 300:

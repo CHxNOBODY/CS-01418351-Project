@@ -10,7 +10,6 @@ fingerprint on a pinned host is the exact signature of a machine-in-the-middle.
 from __future__ import annotations
 
 import argparse
-import getpass
 import hmac
 import os
 import shlex
@@ -200,11 +199,18 @@ class Client:
             f"    Fingerprint offered: {term.paint(format_fingerprint(self.fingerprint), 'bold')}"
         )
         term.hint("Check it matches the one printed by the server, then type its pairing code.")
+        if term.can_hide_input():
+            term.hint("typing is hidden -- you will see one * per character")
+        else:
+            term.hint("this terminal cannot hide input, so the code will be visible")
         while True:
             try:
-                entered = getpass.getpass("    pairing code: ")
+                entered = term.read_secret("    pairing code: ")
             except (EOFError, KeyboardInterrupt):
                 raise TransferError("pairing cancelled") from None
+            if not entered.strip():
+                term.warn("nothing entered -- type the code shown on the server, then Enter")
+                continue
             try:
                 normalize_code(entered)
                 return entered
