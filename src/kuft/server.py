@@ -548,6 +548,12 @@ def serve(cfg: Config) -> int:
         term.hint("another server may already be running; try --port 5151")
         return 1
     listener.listen(16)
+    # Accept in slices rather than parking in one blocking call.  Windows does
+    # not interrupt a blocking socket call for Ctrl+C: the console handler only
+    # sets a flag, and that flag is turned into KeyboardInterrupt the next time
+    # the interpreter runs bytecode.  Sitting in accept() forever means that
+    # never happens, so the server ignores Ctrl+C until a client connects.
+    listener.settimeout(0.5)
 
     reachable = lan_addresses() if cfg.host in ("0.0.0.0", "::") else [cfg.host]
     lines = [
@@ -572,7 +578,11 @@ def serve(cfg: Config) -> int:
 
     try:
         while True:
-            raw, peer = listener.accept()
+            try:
+                raw, peer = listener.accept()
+            except socket.timeout:
+                continue  # nobody knocked; loop so a pending Ctrl+C can land
+            raw.settimeout(None)  # undo the listener's timeout on the new socket
             if not slots.acquire(blocking=False):
                 _refuse(raw, context, cfg)
                 continue

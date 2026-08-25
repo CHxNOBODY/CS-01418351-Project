@@ -92,17 +92,50 @@ def ensure_dependencies(argv: list[str]) -> None:
 
     child = subprocess.Popen([str(interpreter), str(script), *argv], env=env)
     _tie_lifetime_to_ours(child.pid)
-    try:
-        raise SystemExit(child.wait())
-    except KeyboardInterrupt:
-        # In a real console the Ctrl+C reached the child as well, so give it a
-        # moment to shut down on its own terms before insisting.
+    raise SystemExit(_wait_for(child))
+
+
+def _wait_for(child: subprocess.Popen) -> int:
+    """Wait for the child, in slices, so Ctrl+C is not swallowed by the wait.
+
+    A plain ``wait()`` parks in a single OS call.  On Windows a pending Ctrl+C
+    only becomes KeyboardInterrupt when the interpreter next runs bytecode, so
+    waiting that way makes the launcher ignore the interrupt entirely -- and
+    the launcher is the process the terminal is actually watching.  Polling
+    hands the interpreter that chance several times a second.
+    """
+    while True:
         try:
-            code = child.wait(timeout=5)
+            return child.wait(timeout=0.2)
         except subprocess.TimeoutExpired:
-            child.terminate()
-            code = child.wait()
-        raise SystemExit(code) from None
+            continue
+        except KeyboardInterrupt:
+            return _stop(child)
+
+
+def _stop(child: subprocess.Popen) -> int:
+    """The interrupt reached us; make sure the child stops too."""
+    # Say something straight away.  Everything below can take a moment, and an
+    # interrupt that produces no output at all is indistinguishable from one
+    # that was ignored.
+    print("  stopping...", flush=True)
+    # Sharing a console means the child got the same Ctrl+C and is already
+    # winding down, so let it finish on its own terms first.
+    for _ in range(10):  # about two seconds
+        try:
+            return child.wait(timeout=0.2)
+        except subprocess.TimeoutExpired:
+            continue
+        except KeyboardInterrupt:
+            break  # a second Ctrl+C means the user is done being patient
+    # It never saw the interrupt -- which is what happens in terminals that
+    # deliver a POSIX signal instead of a console control event.
+    child.terminate()
+    try:
+        return child.wait(timeout=5)
+    except subprocess.TimeoutExpired:
+        child.kill()
+        return child.wait()
 
 
 # The job handle has to outlive this function: Windows kills the job when its

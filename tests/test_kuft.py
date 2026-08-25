@@ -15,9 +15,11 @@ touches the keys or known-hosts file belonging to the person running it.
 
 from __future__ import annotations
 
+import _thread
 import io
 import os
 import socket
+import subprocess
 import sys
 import tempfile
 import types
@@ -33,7 +35,7 @@ os.environ.setdefault("KUFT_NO_REEXEC", "1")
 _TEST_HOME = tempfile.mkdtemp(prefix="kuft-test-home-")
 os.environ["KUFT_HOME"] = _TEST_HOME
 
-from kuft import crypto, protocol, server as server_mod, term  # noqa: E402
+from kuft import bootstrap, crypto, protocol, server as server_mod, term  # noqa: E402
 from kuft.client import Client, FingerprintChanged, TransferError  # noqa: E402
 from kuft.protocol import ProtocolError, Reader, Request, Response, Writer  # noqa: E402
 
@@ -756,6 +758,116 @@ class CapacityTests(E2EBase):
         self.addCleanup(second.close)
         with self.assertRaises((TransferError, ConnectionError, OSError)):
             second.connect(code=self.code)
+
+
+# ------------------------------------------------------------------ Ctrl+C
+
+
+_INTERRUPT_DRIVER = '''
+"""Park serve() in accept(), then deliver a SIGINT the way Ctrl+C does.
+
+_thread.interrupt_main() marks SIGINT pending exactly as the console handler
+does; the interpreter raises KeyboardInterrupt at the next bytecode boundary.
+A blocking accept() never reaches one, which is precisely the bug.
+"""
+import _thread, io, os, socket, sys, tempfile, threading, time
+from argparse import Namespace
+from pathlib import Path
+
+os.environ["KUFT_HOME"] = tempfile.mkdtemp(prefix="kuft-int-")
+sys.path.insert(0, SRC)
+
+from kuft import crypto, server as server_mod
+
+share = Path(tempfile.mkdtemp(prefix="kuft-share-"))
+with socket.socket() as probe:
+    probe.bind(("127.0.0.1", 0))
+    port = probe.getsockname()[1]
+
+cfg = server_mod.Config(
+    Namespace(host="127.0.0.1", port=port, share=str(share), read_only=False,
+              max_clients=4, rate_limit=0, max_upload=8, verbose=False),
+    crypto.ServerIdentity.load_or_create(),
+)
+
+knock = threading.Timer(1.0, _thread.interrupt_main)
+knock.daemon = True
+knock.start()
+
+# Never let a regression hang the suite: fail loudly instead.  Both timers must
+# be daemons -- SystemExit waits for non-daemon threads, so a live watchdog
+# would outlive a clean exit and report failure on its way out.
+watchdog = threading.Timer(20, lambda: os._exit(9))
+watchdog.daemon = True
+watchdog.start()
+
+sys.stdout = io.StringIO()
+code = server_mod.serve(cfg)
+sys.stdout = sys.__stdout__
+watchdog.cancel()
+raise SystemExit(0 if code == 0 else 1)
+'''
+
+
+class InterruptTests(unittest.TestCase):
+    """Ctrl+C has to stop the server, including while it idles in accept().
+
+    Windows does not break a blocking socket call for Ctrl+C -- the console
+    handler only sets a flag, which becomes KeyboardInterrupt when the
+    interpreter next runs bytecode.  A server parked in accept() therefore
+    ignored Ctrl+C until someone happened to connect.
+    """
+
+    def test_serve_stops_when_interrupted_while_idle(self):
+        src = str(Path(__file__).resolve().parents[1] / "src")
+        driver = "SRC = %r\n%s" % (src, _INTERRUPT_DRIVER)
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "driver.py"
+            path.write_text(driver, encoding="utf-8")
+            done = subprocess.run(
+                [sys.executable, str(path)],
+                capture_output=True, text=True, timeout=60,
+            )
+        self.assertEqual(
+            done.returncode, 0,
+            f"serve() did not stop on an interrupt (rc={done.returncode})\\n{done.stderr}",
+        )
+
+    def test_launcher_wait_is_interruptible_and_stops_the_child(self):
+        """The launcher is the process the terminal watches, so its wait
+        must not swallow the interrupt either."""
+        child = subprocess.Popen(
+            [sys.executable, "-c", "import time; time.sleep(600)"]
+        )
+        try:
+            knock = threading.Timer(1.0, _thread.interrupt_main)
+            knock.daemon = True
+            knock.start()
+            started = time.monotonic()
+            code = bootstrap._wait_for(child)
+            took = time.monotonic() - started
+            self.assertIsNotNone(code)
+            self.assertLess(took, 30, "launcher ignored the interrupt")
+            self.assertIsNotNone(child.poll(), "child outlived the launcher")
+        finally:
+            if child.poll() is None:
+                child.kill()
+                child.wait()
+
+    def test_accepted_sockets_do_not_inherit_the_listener_timeout(self):
+        """The polling timeout must not leak onto client connections."""
+        listener = socket.socket()
+        listener.bind(("127.0.0.1", 0))
+        listener.listen(1)
+        listener.settimeout(0.5)
+        try:
+            with socket.create_connection(listener.getsockname(), timeout=5):
+                raw, _ = listener.accept()
+                with raw:
+                    raw.settimeout(None)
+                    self.assertIsNone(raw.gettimeout())
+        finally:
+            listener.close()
 
 
 if __name__ == "__main__":
