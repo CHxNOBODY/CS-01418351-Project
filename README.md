@@ -187,11 +187,11 @@ python kuft.py connect 192.168.1.114 --put report.pdf --force
 | `ls [dir]` | list a directory | `lls [dir]` | list a local directory |
 | `cd <dir>` | change remote directory | `lcd <dir>` | change local directory |
 | `pwd` | show remote directory | `lpwd` | show local directory |
-| `stat <file>` | size, time, checksum | | |
+| `stat <file>` | size, time, checksum | `lrm <file>` | delete a local file |
 | `get <f> [as]` | download, resumable | | |
 | `put <f> [as]` | upload (`--force` to replace) | | |
 | `mkdir <dir>` | create a directory | | |
-| `rm <path>` | delete a file or empty directory | | |
+| `rm <path>` | delete a file or empty directory **on the server** | | |
 | `mv <a> <b>` | rename or move | | |
 | `info` | TLS, cipher, fingerprint | `help` | command list |
 | `quit` | close politely | | |

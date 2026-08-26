@@ -372,7 +372,7 @@ HELP = """
     ls [dir]        list a directory      lls [dir]     list a local directory
     cd <dir>        change remote dir     lcd <dir>     change local dir
     pwd             show remote dir       lpwd          show local dir
-    stat <file>     size + checksum
+    stat <file>     size + checksum       lrm <file>    delete a local file
     get <f> [as]    download (resumable)
     put <f> [as]    upload
     mkdir <dir>     create a directory
@@ -452,6 +452,7 @@ class Shell:
             "lls": self.cmd_lls,
             "lcd": self.cmd_lcd,
             "lpwd": self.cmd_lpwd,
+            "lrm": self.cmd_lrm,
             "info": self.cmd_info,
             "quit": self.cmd_quit,
             "exit": self.cmd_quit,
@@ -587,6 +588,17 @@ class Shell:
 
     def cmd_lpwd(self, args: list[str]) -> None:
         term.info(f"    {Path.cwd()}")
+
+    def cmd_lrm(self, args: list[str]) -> None:
+        if not args:
+            raise TransferError("usage: lrm <local-file>")
+        target = Path(args[0]).expanduser()
+        if not target.exists():
+            raise TransferError(f"no such local file: {target}")
+        if target.is_dir():
+            raise TransferError(f"{target} is a directory -- lrm deletes files only")
+        target.unlink()
+        term.ok(f"deleted {target}")
 
     def cmd_info(self, args: list[str]) -> None:
         client = self.client
