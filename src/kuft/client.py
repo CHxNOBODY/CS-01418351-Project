@@ -16,7 +16,7 @@ import shlex
 import socket
 import ssl
 import sys
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 
 from . import term
 from .crypto import (
@@ -377,7 +377,8 @@ HELP = """
     put <f> [as]    upload
     mkdir <dir>     create a directory
     rm <path>       delete a file or empty dir
-    mv <a> <b>      rename or move
+    mv <f> <dir>    move into a directory
+    rn <f> <name>   rename in place
 
   Session
     info            server, TLS and fingerprint details
@@ -449,6 +450,8 @@ class Shell:
             "mkdir": self.cmd_mkdir,
             "mv": self.cmd_mv,
             "move": self.cmd_mv,
+            "rn": self.cmd_rn,
+            "rename": self.cmd_rn,
             "lls": self.cmd_lls,
             "lcd": self.cmd_lcd,
             "lpwd": self.cmd_lpwd,
@@ -550,17 +553,48 @@ class Shell:
         resp = self.client.request(Request("MKDIR", self.client._remote(args[0])))
         term.status_line(resp.code, resp.phrase, resp.detail)
 
-    def cmd_mv(self, args: list[str]) -> None:
-        if len(args) < 2:
-            raise TransferError("usage: mv <source> <destination>")
-        resp = self.client.request(
-            Request(
-                "MOVE",
-                self.client._remote(args[0]),
-                {"destination": self.client._remote(args[1])},
-            )
-        )
+    def _remote_kind(self, remote: str) -> str | None:
+        """Return "dir", "file", or None when the remote path does not exist."""
+        resp = self.client.request(Request("STAT", remote))
+        return resp.headers.get("kind") if resp.ok else None
+
+    def _rename_to(self, source: str, destination: str) -> None:
+        resp = self.client.request(Request("MOVE", source, {"destination": destination}))
         term.status_line(resp.code, resp.phrase, resp.detail)
+
+    def cmd_mv(self, args: list[str]) -> None:
+        """Move a file into a directory, keeping its name.  Renaming is 'rn'."""
+        if len(args) < 2:
+            raise TransferError("usage: mv <source> <directory>")
+        source = self.client._remote(args[0])
+        folder = self.client._remote(args[1])
+        kind = self._remote_kind(folder)
+        if kind is None:
+            raise TransferError(
+                f"no such directory: {args[1]} -- make it with 'mkdir {args[1]}', "
+                f"or use 'rn' to rename a file in place"
+            )
+        if kind != "dir":
+            raise TransferError(
+                f"{args[1]} is a file, not a directory -- "
+                f"use 'rn {args[0]} {args[1]}' to rename instead"
+            )
+        name = PurePosixPath(source).name
+        self._rename_to(source, f"{folder.rstrip('/')}/{name}")
+
+    def cmd_rn(self, args: list[str]) -> None:
+        """Give a file a new name where it already sits.  Moving is 'mv'."""
+        if len(args) < 2:
+            raise TransferError("usage: rn <path> <new-name>")
+        new_name = args[1]
+        if "/" in new_name or "\\" in new_name or new_name in (".", ".."):
+            raise TransferError(
+                f"{new_name!r} is not a plain file name -- rn renames in place; "
+                f"use 'mv' to move a file to another directory"
+            )
+        source = self.client._remote(args[0])
+        parent = PurePosixPath(source).parent.as_posix()
+        self._rename_to(source, f"/{new_name}" if parent == "/" else f"{parent}/{new_name}")
 
     def cmd_lls(self, args: list[str]) -> None:
         base = Path(args[0]).expanduser() if args else Path.cwd()

@@ -154,17 +154,33 @@ put outbox/homework.txt --force
 
 **Expect** `200 OK` (not `201` — 200 means it replaced something).
 
-### A11. Rename and delete
+### A11. Rename, move and delete
+
+`rn` renames a file in place; `mv` moves it into a directory. Neither does the
+other's job.
 
 ```text
-mv homework.txt hw-final.txt
+rn homework.txt hw-final.txt
 ls
-rm hw-final.txt
-ls
+mv hw-final.txt lecture
+ls lecture
+rm lecture/hw-final.txt
+ls lecture
 ```
 
-**Expect** `200 OK`, then the new name in the listing, then `204 NO CONTENT`,
-then it gone.
+**Expect** `200 OK` and the new name in the listing, then `200 OK` and the file
+under `lecture/`, then `204 NO CONTENT` and it gone.
+
+Now the refusals:
+
+```text
+rn hw-final.txt sub/hw.txt
+mv homework.txt readme.txt
+```
+
+**Expect** both rejected by the client without a round trip: `rn` refuses a name
+containing `/`, and `mv` refuses a destination that is a file, each pointing at
+the other command.
 
 ### A12. Directories
 
@@ -291,8 +307,8 @@ filter `tcp.port == 5150`, and do a `get readme.txt`. **Expect** to see
 python kuft.py serve --read-only
 ```
 
-From a client, `ls` and `get readme.txt` should work; `put`, `rm`, `mkdir`
-and `mv` should all return `403 FORBIDDEN`.
+From a client, `ls` and `get readme.txt` should work; `put`, `rm`, `mkdir`,
+`mv` and `rn` should all return `403 FORBIDDEN`.
 
 ### B5. Rate limiting
 

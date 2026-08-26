@@ -192,7 +192,8 @@ python kuft.py connect 192.168.1.114 --put report.pdf --force
 | `put <f> [as]` | upload (`--force` to replace) | | |
 | `mkdir <dir>` | create a directory | | |
 | `rm <path>` | delete a file or empty directory **on the server** | | |
-| `mv <a> <b>` | rename or move | | |
+| `mv <f> <dir>` | move a file into a directory | | |
+| `rn <f> <name>` | rename a file where it sits | | |
 | `info` | TLS, cipher, fingerprint | `help` | command list |
 | `quit` | close politely | | |
 

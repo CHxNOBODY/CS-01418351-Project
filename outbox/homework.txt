@@ -1,3 +1,0 @@
-CS-01418351 -- Project 1
-Uploaded from the client to prove PUT works.
-Change a character in this file and upload it again to see 409, then --force.
