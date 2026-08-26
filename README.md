@@ -1,4 +1,4 @@
-# KUFT/2.0 — encrypted file transfer between two computers
+# KUFT — encrypted file transfer between two computers
 
 ### CS-01418351 · Computer Networks
 
@@ -9,7 +9,7 @@ a terminal. No cloud, no account, no USB stick. Two commands.
    sender                                    receiver
      |                                          |
      |<========== TCP + TLS 1.3 handshake ======|
-     |------- HELLO * KUFT/2.0 --------------->|   capabilities + salt + nonce
+     |------- HELLO * KUFT ------------------->|   capabilities + salt + nonce
      |<------ AUTH  (proof of pairing code) ---|   both sides prove the code
      |------- KUFT/2.0 200 OK (server proof) ->|
      |<------ GET report.pdf ------------------|
