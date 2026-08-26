@@ -590,10 +590,17 @@ def serve(cfg: Config) -> int:
 
     try:
         while True:
+            raw = None
             try:
                 raw, peer = listener.accept()
             except socket.timeout:
-                continue  # nobody knocked; loop so a pending Ctrl+C can land
+                pass  # nobody knocked
+            if raw is None:
+                # Loop so a pending Ctrl+C can land.  The `continue` has to sit
+                # outside the except clause: on 3.11+ a signal that arrives on
+                # the jump out of an except block escapes the enclosing try,
+                # which is exactly the interrupt this poll exists to catch.
+                continue
             raw.settimeout(None)  # undo the listener's timeout on the new socket
             if not slots.acquire(blocking=False):
                 _refuse(raw, context, cfg)

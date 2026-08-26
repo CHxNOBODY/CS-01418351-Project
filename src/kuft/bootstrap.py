@@ -104,13 +104,19 @@ def _wait_for(child: subprocess.Popen) -> int:
     the launcher is the process the terminal is actually watching.  Polling
     hands the interpreter that chance several times a second.
     """
-    while True:
-        try:
-            return child.wait(timeout=0.2)
-        except subprocess.TimeoutExpired:
-            continue
-        except KeyboardInterrupt:
-            return _stop(child)
+    # The interrupt is caught *around* the loop, not by a clause beside the
+    # timeout.  A pending Ctrl+C is usually delivered on the jump back to the
+    # top of the loop, and that jump is only covered by an enclosing handler --
+    # a sibling ``except KeyboardInterrupt`` guards the wait alone, so the
+    # interrupt would sail straight out of this function instead.
+    try:
+        while True:
+            try:
+                return child.wait(timeout=0.2)
+            except subprocess.TimeoutExpired:
+                pass  # still running; give the interpreter another chance
+    except KeyboardInterrupt:
+        return _stop(child)
 
 
 def _stop(child: subprocess.Popen) -> int:
@@ -121,13 +127,14 @@ def _stop(child: subprocess.Popen) -> int:
     print("  stopping...", flush=True)
     # Sharing a console means the child got the same Ctrl+C and is already
     # winding down, so let it finish on its own terms first.
-    for _ in range(10):  # about two seconds
-        try:
-            return child.wait(timeout=0.2)
-        except subprocess.TimeoutExpired:
-            continue
-        except KeyboardInterrupt:
-            break  # a second Ctrl+C means the user is done being patient
+    try:
+        for _ in range(10):  # about two seconds
+            try:
+                return child.wait(timeout=0.2)
+            except subprocess.TimeoutExpired:
+                pass  # still winding down
+    except KeyboardInterrupt:
+        pass  # a second Ctrl+C means the user is done being patient
     # It never saw the interrupt -- which is what happens in terminals that
     # deliver a POSIX signal instead of a console control event.
     child.terminate()
