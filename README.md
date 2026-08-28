@@ -257,6 +257,24 @@ If step 3 fails it is the network, not KUFT. Many public and university Wi-Fi
 networks isolate clients from each other, which blocks this entirely; a phone
 hotspot with both machines on it is the usual way around that.
 
+### When the two machines are far apart
+
+The address `serve` prints is a **private** one — `192.168.x.x`, `10.x.x.x`.
+It only means anything inside that building's network. Typed on a machine
+somewhere else it names a device on *that* network instead, so the connection
+never arrives and eventually reports `timed out`. `connect` says so when it
+happens. Cross a real distance with one of:
+
+| Route | On the server | On the client |
+| --- | --- | --- |
+| VPN — simplest, works behind CGNAT | `tailscale up`, note the `100.x` address | `connect 100.x.y.z` |
+| Port forward — needs a public IP | forward TCP 5150 to the server on the router | `connect <public IP>` |
+| Tunnel — nothing to configure | `ngrok tcp 5150` | `connect 0.tcp.ngrok.io --port <ngrok port>` |
+
+The address is the only thing that changes: pairing, pinning and TLS work the
+same over any of them. A server reached at a new address is a new entry in
+known-hosts, so it asks for the pairing code once more.
+
 ---
 
 ## Layout

@@ -19,6 +19,7 @@ import sys
 from pathlib import Path, PurePosixPath
 
 from . import term
+from .net import diagnose
 from .crypto import (
     KnownHosts,
     b64,
@@ -699,7 +700,8 @@ def main(argv: list[str] | None = None) -> int:
         return 1
     except OSError as exc:
         term.fail(f"cannot reach {args.host}:{args.port} -- {exc.strerror or exc}")
-        term.hint("check the address, that the server is running, and the firewall")
+        for line in diagnose(args.host, args.port, exc):
+            term.hint(line)
         return 1
 
     shell = Shell(client)

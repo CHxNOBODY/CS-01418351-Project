@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import hmac
+import ipaddress
 import os
 import socket
 import ssl
@@ -22,6 +23,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from . import term
+from .net import local_addresses, remote_advice
 from .crypto import (
     ServerIdentity,
     b64,
@@ -526,25 +528,11 @@ def build_ssl_context(identity: ServerIdentity) -> ssl.SSLContext:
     return ctx
 
 
-def lan_addresses() -> list[str]:
-    """Addresses a client on the same network could actually reach us on."""
-    found = []
+def _is_private(address: str) -> bool:
     try:
-        probe = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        probe.settimeout(0.2)
-        probe.connect(("10.255.255.255", 1))  # never sends a packet
-        found.append(probe.getsockname()[0])
-        probe.close()
-    except OSError:
-        pass
-    try:
-        for info in socket.getaddrinfo(socket.gethostname(), None, socket.AF_INET):
-            addr = info[4][0]
-            if addr not in found and not addr.startswith("127."):
-                found.append(addr)
-    except OSError:
-        pass
-    return found
+        return ipaddress.ip_address(address).is_private
+    except ValueError:
+        return False
 
 
 def serve(cfg: Config) -> int:
@@ -567,7 +555,7 @@ def serve(cfg: Config) -> int:
     # never happens, so the server ignores Ctrl+C until a client connects.
     listener.settimeout(0.5)
 
-    reachable = lan_addresses() if cfg.host in ("0.0.0.0", "::") else [cfg.host]
+    reachable = local_addresses() if cfg.host in ("0.0.0.0", "::") else [cfg.host]
     lines = [
         term.paint("KUFT/2.0 secure file share", "bold"),
         "",
@@ -575,7 +563,7 @@ def serve(cfg: Config) -> int:
         + (term.paint("  (read-only)", "yellow") if cfg.read_only else ""),
         f"  listening  {cfg.host}:{cfg.port}   TLS 1.3",
         "",
-        term.paint("  On the other computer, run:", "bold"),
+        term.paint("  On the other computer, on this same network, run:", "bold"),
     ]
     for addr in reachable or [cfg.host]:
         lines.append(term.paint(f"    python kuft.py connect {addr} --port {cfg.port}", "cyan"))
@@ -586,6 +574,13 @@ def serve(cfg: Config) -> int:
     ]
     term.banner(lines)
     term.hint("the code is asked for once per client; Ctrl+C stops the server")
+    # The addresses above are the ones this machine holds, and a private one is
+    # meaningless to a client that is not on this network -- the single most
+    # common cause of a connection that simply times out.
+    if any(_is_private(addr) for addr in reachable):
+        term.hint("those addresses only work from this network; from further away:")
+        for line in remote_advice(cfg.port)[1:]:
+            term.hint(line)
     print()
 
     try:
