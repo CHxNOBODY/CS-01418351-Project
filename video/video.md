@@ -1,1 +1,2 @@
-[Link Video](https://drive.google.com/file/d/1lv5BsXssgB3_SQ2-gCUaBHlPZ8k2RPWa/view?usp=sharing)
+[Link Video: ทดลองใช้](https://drive.google.com/file/d/1lv5BsXssgB3_SQ2-gCUaBHlPZ8k2RPWa/view?usp=sharing)
+[Link Video: อธิบายโปรเจค](https://drive.google.com/file/d/1RbmIe2ap6FwPI4dujCkypbG-dEAPWlnH/view?usp=sharing)
