@@ -1,0 +1,1415 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<title>KUFT/2.0 — เอกสารออกแบบโครงงาน</title>
+<style>
+  @page {
+    size: A4;
+    margin: 20mm 18mm 18mm 18mm;
+    @bottom-center { content: counter(page); }
+  }
+
+  :root {
+    --ink: #16181d;
+    --muted: #5b6472;
+    --rule: #d4d9e0;
+    --accent: #1f4b8e;
+    --code-bg: #f4f6f9;
+    --code-ink: #1a2a3a;
+    --th-bg: #eef2f7;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    font-family: "Leelawadee UI", "Sarabun", "TH Sarabun New", Tahoma, "Segoe UI", sans-serif;
+    font-size: 10.5pt;
+    line-height: 1.62;
+    color: var(--ink);
+    margin: 0;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3, h4 { line-height: 1.3; margin: 0; font-weight: 700; }
+
+  h1 { font-size: 22pt; letter-spacing: -0.01em; }
+
+  h2 {
+    font-size: 15pt;
+    margin: 26pt 0 9pt;
+    padding-bottom: 5pt;
+    border-bottom: 2px solid var(--accent);
+    color: var(--accent);
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+
+  h3 {
+    font-size: 12pt;
+    margin: 17pt 0 6pt;
+    color: #17335f;
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+
+  h4 {
+    font-size: 10.5pt;
+    margin: 12pt 0 4pt;
+    color: #2b3442;
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+
+  p { margin: 0 0 7pt; text-align: justify; }
+  ul, ol { margin: 0 0 8pt; padding-left: 18pt; }
+  li { margin-bottom: 3.5pt; }
+  li > ul, li > ol { margin-top: 3.5pt; }
+
+  code, kbd {
+    font-family: Consolas, "Cascadia Mono", "DejaVu Sans Mono", monospace;
+    font-size: 0.88em;
+    background: var(--code-bg);
+    padding: 1px 4px;
+    border-radius: 3px;
+    color: var(--code-ink);
+    white-space: nowrap;
+  }
+
+  pre {
+    font-family: Consolas, "Cascadia Mono", "DejaVu Sans Mono", monospace;
+    font-size: 8.6pt;
+    line-height: 1.5;
+    background: var(--code-bg);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--accent);
+    border-radius: 4px;
+    padding: 8pt 10pt;
+    margin: 0 0 9pt;
+    overflow-x: auto;
+    white-space: pre;
+    color: var(--code-ink);
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+  pre code { background: none; padding: 0; font-size: 1em; white-space: pre; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 0 0 10pt;
+    font-size: 9.3pt;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+  th, td {
+    border: 1px solid var(--rule);
+    padding: 4.5pt 6pt;
+    text-align: left;
+    vertical-align: top;
+  }
+  th { background: var(--th-bg); font-weight: 700; color: #17335f; }
+  td code, th code { white-space: nowrap; }
+  .num { text-align: right; white-space: nowrap; }
+  .nw  { white-space: nowrap; }
+
+  .cover {
+    height: 246mm;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    page-break-after: always;
+    break-after: page;
+    text-align: center;
+  }
+  .cover .rule { width: 64pt; height: 3px; background: var(--accent); margin: 14pt auto; }
+  .cover .sub { font-size: 13pt; color: var(--muted); margin-bottom: 2pt; }
+  .cover .course { font-size: 11pt; color: var(--muted); margin-top: 4pt; }
+  .cover .meta {
+    margin-top: 34pt;
+    font-size: 10pt;
+    color: var(--muted);
+    line-height: 1.9;
+  }
+  .cover .tagline {
+    margin: 20pt auto 0;
+    max-width: 120mm;
+    font-size: 11pt;
+    color: var(--ink);
+    line-height: 1.7;
+  }
+
+  .toc { page-break-after: always; break-after: page; }
+  .toc h2 { margin-top: 0; }
+  .toc ol { list-style: none; padding-left: 0; counter-reset: s; }
+  .toc > ol > li {
+    counter-increment: s;
+    margin-bottom: 5pt;
+    font-weight: 700;
+  }
+  .toc > ol > li::before { content: counter(s) ". "; color: var(--accent); }
+  .toc ol ol { padding-left: 16pt; margin-top: 3pt; }
+  .toc ol ol li { font-weight: 400; color: var(--muted); font-size: 9.7pt; }
+
+  .callout {
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--accent);
+    background: #f7f9fc;
+    padding: 8pt 11pt;
+    margin: 0 0 10pt;
+    border-radius: 4px;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+  .callout p:last-child { margin-bottom: 0; }
+  .callout .label {
+    font-weight: 700;
+    color: var(--accent);
+    font-size: 9.2pt;
+    letter-spacing: 0.04em;
+    display: block;
+    margin-bottom: 3pt;
+  }
+
+  .answer {
+    border: 1.5px solid var(--accent);
+    background: #eef3fa;
+    padding: 9pt 12pt;
+    margin: 0 0 11pt;
+    border-radius: 4px;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+  .answer p:last-child { margin-bottom: 0; }
+  .answer .label {
+    font-weight: 700;
+    color: var(--accent);
+    font-size: 9.2pt;
+    letter-spacing: 0.04em;
+    display: block;
+    margin-bottom: 3pt;
+  }
+
+  .exchange {
+    page-break-inside: avoid;
+    break-inside: avoid;
+    margin-bottom: 11pt;
+  }
+  .exchange h4 { margin-top: 0; }
+
+  .keep { page-break-inside: avoid; break-inside: avoid; }
+  .newpage { page-break-before: always; break-before: page; }
+  hr { border: none; border-top: 1px solid var(--rule); margin: 16pt 0; }
+  .footnote { font-size: 9pt; color: var(--muted); }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════ ปก ═══════════════════════ -->
+<section class="cover">
+  <div class="sub">เอกสารออกแบบโครงงาน</div>
+  <h1>KUFT/2.0</h1>
+  <div class="rule"></div>
+  <div class="sub">การรับส่งไฟล์แบบเข้ารหัสระหว่างคอมพิวเตอร์สองเครื่อง</div>
+  <div class="course">Kasetsart University File Transfer, version 2</div>
+
+  <div class="tagline">
+    โปรแกรมรับส่งไฟล์แบบ client/server ที่ออกแบบโปรโตคอลชั้นแอปพลิเคชันขึ้นเอง
+    ทำงานบน TCP ร่วมกับ TLS 1.3 พร้อมกลไกจับคู่ที่ผูกการพิสูจน์ตัวตนเข้ากับ
+    ใบรับรองของช่องทางสื่อสาร
+  </div>
+
+  <div class="meta">
+    <strong>วิชา</strong> CS-01418351 Computer Networks<br>
+    <strong>งาน</strong> Project 1: Socket Programming<br>
+    <strong>ภาษา</strong> Python 3.10+ · ประมาณ 4,000 บรรทัด · 6 โมดูล
+  </div>
+</section>
+
+<!-- ═══════════════════════ สารบัญ ═══════════════════════ -->
+<section class="toc">
+  <h2>สารบัญ</h2>
+  <ol>
+    <li>โปรแกรมนี้คืออะไร และใช้สำหรับทำอะไร
+      <ol>
+        <li>1.1 ปัญหาที่ต้องการแก้</li>
+        <li>1.2 ตัวโปรแกรมประกอบด้วยอะไรบ้าง</li>
+        <li>1.3 เป้าหมายการออกแบบ</li>
+        <li>1.4 สิ่งที่จงใจไม่ทำ</li>
+      </ol>
+    </li>
+    <li>คุณลักษณะของแอปพลิเคชัน (Characteristics)
+      <ol>
+        <li>2.1 สรุปคุณลักษณะเชิงเครือข่าย</li>
+        <li>2.2 สถาปัตยกรรมและโมดูล</li>
+        <li>2.3 โมเดลการทำงานพร้อมกัน</li>
+        <li>2.4 ลักษณะของทราฟฟิกและการใช้ทรัพยากร</li>
+        <li>2.5 แบบจำลองภัยคุกคาม</li>
+      </ol>
+    </li>
+    <li>Service Model ของ Transport Layer: เลือก TCP เพราะอะไร
+      <ol>
+        <li>3.1 ความต้องการที่แท้จริงของแอปพลิเคชัน</li>
+        <li>3.2 Service model สองแบบที่มีให้เลือก</li>
+        <li>3.3 การจับคู่ความต้องการกับกลไกของ TCP</li>
+        <li>3.4 เหตุผลชี้ขาด: TLS 1.3 ทำงานบน TCP</li>
+        <li>3.5 ช่องว่างใน service model ของ TCP ที่ต้องเติมเอง</li>
+        <li>3.6 สิ่งที่ TCP ไม่รับประกัน แต่เราไม่ต้องการ</li>
+        <li>3.7 กรณีที่ UDP จะเป็นคำตอบที่ถูกต้อง</li>
+      </ol>
+    </li>
+    <li>การออกแบบ Application-Layer Protocol
+      <ol>
+        <li>4.1 ข้อจำกัดที่การออกแบบต้องทำให้ได้</li>
+        <li>4.2 รูปแบบข้อความ</li>
+        <li>4.3 Request line และ Status line</li>
+        <li>4.4 การตัดสินใจสี่ข้อเรื่อง framing</li>
+        <li>4.5 ขีดจำกัดที่บังคับใช้</li>
+        <li>4.6 ชุดคำสั่ง (Methods)</li>
+        <li>4.7 เฮดเดอร์ทั้งหมด</li>
+        <li>4.8 รหัสสถานะ (Status codes)</li>
+        <li>4.9 Request และ Response messages ทุกคำสั่ง</li>
+        <li>4.10 กลไกจับคู่ (Pairing exchange)</li>
+        <li>4.11 ความหมายของการโอนย้าย</li>
+        <li>4.12 State machine ของ session</li>
+        <li>4.13 การกักขอบเขต (Jail)</li>
+      </ol>
+    </li>
+    <li>สรุปคำตอบ</li>
+  </ol>
+</section>
+
+<!-- ═══════════════════════ 1 ═══════════════════════ -->
+<h2>1. โปรแกรมนี้คืออะไร และใช้สำหรับทำอะไร</h2>
+
+<div class="answer">
+  <span class="label">คำตอบโดยย่อ</span>
+  <p><strong>KUFT/2.0</strong> คือโปรแกรมรับส่งไฟล์แบบ client/server สำหรับย้ายไฟล์
+  <strong>โดยตรง</strong> ระหว่างคอมพิวเตอร์สองเครื่องที่อยู่บนเครือข่ายเดียวกัน
+  โดยข้อมูลถูกเข้ารหัสตลอดเส้นทาง ทั้งสองฝั่งพิสูจน์ตัวตนซึ่งกันและกัน
+  และไฟล์ที่รับมาถูกตรวจสอบความถูกต้องด้วย SHA-256 ก่อนถูกส่งมอบให้ผู้ใช้
+  ไม่ผ่านบุคคลที่สาม ไม่ต้องมีบัญชีผู้ใช้ และไม่ต้องตั้งค่าอะไรนอกจากรหัสจับคู่หนึ่งรหัส</p>
+</div>
+
+<h3>1.1 ปัญหาที่ต้องการแก้</h3>
+
+<p>คอมพิวเตอร์สองเครื่องอยู่บนเครือข่ายเดียวกัน — Wi-Fi ที่บ้าน โต๊ะแล็บ หรือ hotspot
+จากมือถือ — เครื่องหนึ่งมีไฟล์ที่อีกเครื่องต้องการ วิธีที่คนทั่วไปใช้กันนั้น
+มีข้อเสียชัดเจนทุกวิธี</p>
+
+<table>
+  <thead>
+    <tr><th style="width:32%">วิธีที่ใช้กันทั่วไป</th><th>ปัญหาที่แท้จริง</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>ส่งอีเมลหาตัวเอง</td><td>จำกัดขนาดไฟล์ และไฟล์ต้องผ่านเซิร์ฟเวอร์ของบุคคลที่สาม</td></tr>
+    <tr><td>Cloud drive / แอปแชต</td><td>อัปโหลดขึ้นอินเทอร์เน็ตแล้วดาวน์โหลดกลับลงมา เพียงเพื่อย้ายไฟล์ในระยะสองเมตร ต้องมีบัญชีและต้องมีเน็ตที่ใช้งานได้</td></tr>
+    <tr><td>USB flash drive</td><td>ต้องเดินไปเสียบเอง ช้า และตัวแฟลชไดรฟ์เองก็เป็นช่องทางแพร่มัลแวร์</td></tr>
+    <tr><td>Windows file sharing (SMB)</td><td>ใหญ่เทอะทะ ต้องตั้งค่า domain/workgroup และเป็นบริการที่ทุกคู่มือความปลอดภัยบอกให้ปิดไฟร์วอลล์กั้นไว้</td></tr>
+    <tr><td><code>ftp</code> / <code>python -m http.server</code></td><td>ส่งเป็น plaintext ใครก็ตามที่อยู่บน Wi-Fi เดียวกันอ่านไฟล์ได้ และถ้าเป็น FTP ก็อ่านรหัสผ่านได้ด้วย</td></tr>
+  </tbody>
+</table>
+
+<p>ทุกวิธีที่ว่ามา <strong>ไม่อ้อม ก็ไม่เข้ารหัส หรือไม่ก็ทั้งสองอย่าง</strong>
+KUFT จึงเกิดขึ้นเป็นคำตอบที่เล็กและตรงไปตรงมา: พิมพ์คำสั่งเดียวในแต่ละเครื่อง
+ไฟล์วิ่งตรงระหว่างสองเครื่องผ่านเครือข่ายภายใน</p>
+
+<h3>1.2 ตัวโปรแกรมประกอบด้วยอะไรบ้าง</h3>
+
+<ul>
+  <li><strong>โปรโตคอลชั้น Application</strong> ชื่อ KUFT/2.0 ซึ่งออกแบบขึ้นเองทั้งหมด
+      และกำหนดเป็นเอกสารข้อกำหนดแยกต่างหาก</li>
+  <li><strong>เซิร์ฟเวอร์</strong> ที่แชร์ไดเรกทอรีเดียว และไม่ให้เข้าถึงอะไรที่อยู่เหนือขึ้นไป</li>
+  <li><strong>ไคลเอนต์</strong> ที่มี shell แบบโต้ตอบ (<code>ls</code>, <code>cd</code>,
+      <code>get</code>, <code>put</code>, <code>rm</code>, <code>mv</code>, <code>rn</code>,
+      <code>mkdir</code>, <code>stat</code>) และโหมดคำสั่งเดียวจบสำหรับเขียนสคริปต์</li>
+  <li><strong>กลไกการจับคู่ (pairing)</strong> ที่ให้การพิสูจน์ตัวตนแบบสองทาง
+      โดยไม่ต้องพึ่ง certificate authority, directory service หรือบัญชีคลาวด์ใด ๆ</li>
+</ul>
+
+<p>การใช้งานจริงมีเพียงสองคำสั่ง:</p>
+
+<pre><code>เครื่องที่มีไฟล์      python kuft.py serve
+                     → พิมพ์ที่อยู่ IP และรหัสจับคู่ออกมาบนหน้าจอ
+
+เครื่องที่ต้องการไฟล์  python kuft.py connect 192.168.1.114
+                     → พิมพ์รหัสจับคู่หนึ่งครั้ง แล้วใช้ ls / get / put ได้ทันที</code></pre>
+
+<h3>1.3 เป้าหมายการออกแบบ</h3>
+
+<p>เรียงตามลำดับความสำคัญ เมื่อเป้าหมายขัดกัน ข้อที่อยู่บนกว่าชนะเสมอ</p>
+
+<ol>
+  <li><strong>ถูกต้อง</strong> — ไฟล์ที่ไปถึงต้องเหมือนไฟล์ต้นทางทุกไบต์
+      ไม่เช่นนั้นการโอนย้ายต้องล้มเหลวอย่างเห็นได้ชัด ไม่มีเส้นทางที่ข้อมูลเสียหายแบบเงียบ ๆ</li>
+  <li><strong>เป็นความลับและพิสูจน์ตัวตนได้</strong> — ผู้โจมตีที่อยู่บน Wi-Fi เดียวกัน
+      ต้องอ่านข้อมูลไม่ได้ และปลอมเป็นฝั่งใดฝั่งหนึ่งไม่ได้</li>
+  <li><strong>เล็กพอที่จะเข้าใจได้ทั้งหมด</strong> — รวมทั้งโครงงานไม่ถึง 4,000 บรรทัด
+      รูปแบบข้อมูลบนสายพอดีหนึ่งหน้ากระดาษ และอ่านได้จาก packet capture โดยตรง</li>
+  <li><strong>ใช้งานได้ด้วยคำสั่งสองคำสั่ง</strong> — ถ้าต้องอ่านคู่มือก่อนใช้
+      ก็ถือว่าล้มเหลวตามโจทย์ที่ตั้งไว้เอง</li>
+  <li><strong>ใช้ทรัพยากรจำกัด</strong> — โอนไฟล์ 40 GB ต้องใช้หน่วยความจำเท่ากับโอนไฟล์ 4 KB</li>
+</ol>
+
+<h3>1.4 สิ่งที่จงใจไม่ทำ</h3>
+
+<ul>
+  <li><strong>ไม่มีบัญชีผู้ใช้รายบุคคล</strong> — มีรหัสจับคู่ร่วมรหัสเดียว ระดับความไว้วางใจเดียว
+      เหมาะกับเครื่องสองเครื่องของคนคนเดียว ไม่เหมาะกับห้องแล็บหลายผู้ใช้</li>
+  <li><strong>ไม่มี certificate authority</strong> — ใบรับรองเป็นแบบ self-signed
+      และใช้การปักหมุด (pinning) แบบเดียวกับ SSH แทน</li>
+  <li><strong>ไม่มีการโอนแบบวนลึกทั้งไดเรกทอรี</strong> — การลบและการโอนแบบวนลึก
+      ควรเป็นลูปฝั่งไคลเอนต์ที่ผู้ใช้มองเห็นทุกขั้นตอน</li>
+  <li><strong>ไม่มี service discovery</strong> — ต้องพิมพ์หมายเลข IP เอง</li>
+</ul>
+
+<!-- ═══════════════════════ 2 ═══════════════════════ -->
+<h2>2. คุณลักษณะของแอปพลิเคชัน (Characteristics)</h2>
+
+<h3>2.1 สรุปคุณลักษณะเชิงเครือข่าย</h3>
+
+<p>ตารางนี้คือคุณลักษณะที่กำหนดว่าโปรแกรมนี้ต้องการอะไรจากชั้น Transport
+ซึ่งจะถูกใช้เป็นฐานของการตัดสินใจในหัวข้อที่ 3</p>
+
+<table>
+  <thead>
+    <tr><th style="width:30%">คุณลักษณะ</th><th>รายละเอียด</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><strong>สถาปัตยกรรม</strong></td>
+        <td>Client/Server — ฝั่งหนึ่งรัน <code>serve</code> เพื่อแชร์ไดเรกทอรี อีกฝั่งรัน <code>connect</code> ไม่ใช่ peer-to-peer</td></tr>
+    <tr><td><strong>ทิศทางข้อมูล</strong></td>
+        <td>สองทาง — ดาวน์โหลด (<code>GET</code>) และอัปโหลด (<code>PUT</code>) บน connection เดียวกัน</td></tr>
+    <tr><td><strong>ลักษณะ session</strong></td>
+        <td><strong>มีสถานะ (stateful)</strong> และอายุยาว — ทักทาย → พิสูจน์ตัวตน → ทำงานหลายคำสั่งติดกัน → ปิด</td></tr>
+    <tr><td><strong>ขนาดข้อมูล</strong></td>
+        <td>ไม่จำกัดโดยธรรมชาติ — ตั้งแต่ไฟล์ศูนย์ไบต์ถึงหลายสิบกิกะไบต์ในหนึ่งข้อความ</td></tr>
+    <tr><td><strong>ความทนต่อการสูญหาย</strong></td>
+        <td><strong>ศูนย์</strong> — ไฟล์ที่ขาดไปหนึ่งไบต์คือไฟล์เสีย ไม่ใช่ไฟล์ที่แย่ลงนิดหน่อย</td></tr>
+    <tr><td><strong>ความทนต่อความหน่วง</strong></td>
+        <td><strong>สูงมาก</strong> — ไม่ใช่งานเรียลไทม์ ไบต์ที่มาช้ามีค่าเท่ากับไบต์ที่มาตรงเวลา</td></tr>
+    <tr><td><strong>ความต้องการ throughput</strong></td>
+        <td>ยิ่งมากยิ่งดี แต่<strong>ไม่มีขั้นต่ำที่ต้องรับประกัน</strong> การโอนที่ช้ากว่ายังคงถูกต้องสมบูรณ์</td></tr>
+    <tr><td><strong>ความปลอดภัย</strong></td>
+        <td>จำเป็น — ความลับ ความถูกต้อง และการพิสูจน์ตัวตนสองทาง</td></tr>
+    <tr><td><strong>จำนวนผู้ใช้พร้อมกัน</strong></td>
+        <td>น้อย — ค่าเริ่มต้น 8 connection พร้อมกัน</td></tr>
+    <tr><td><strong>ขอบเขตเครือข่าย</strong></td>
+        <td>LAN เดียวกันเป็นหลัก (ขยายข้ามระยะไกลได้ผ่าน VPN, port forward หรือ tunnel)</td></tr>
+  </tbody>
+</table>
+
+<h3>2.2 สถาปัตยกรรมและโมดูล</h3>
+
+<pre><code>kuft.py                    จุดเข้าเพียงจุดเดียว กระจายไปยังคำสั่งย่อย
+src/kuft/
+    bootstrap.py           หา Python ที่มี cryptography ติดตั้งอยู่
+    crypto.py              กุญแจ ใบรับรอง รหัสจับคู่ known hosts
+    protocol.py            รูปแบบข้อมูลบนสาย: encode, decode, stream, status codes
+    server.py              TLS listener, session state machine, request handlers
+    client.py              การจับคู่ การปักหมุด การโอนย้าย และ shell แบบโต้ตอบ
+    term.py                สี แถบความคืบหน้า ตาราง การรับ input แบบซ่อน</code></pre>
+
+<table>
+  <thead>
+    <tr><th style="width:17%">โมดูล</th><th class="num" style="width:9%">บรรทัด</th><th>หน้าที่</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>protocol.py</code></td><td class="num">366</td>
+        <td>รูปแบบข้อมูลบนสาย และเฉพาะรูปแบบข้อมูลบนสายเท่านั้น ไม่รู้จักไฟล์ socket TLS หรือผู้ใช้เลย</td></tr>
+    <tr><td><code>crypto.py</code></td><td class="num">379</td>
+        <td>ตัวตนและความไว้วางใจ: สร้างใบรับรอง, PBKDF2, การสร้าง proof และ <code>known_hosts.json</code></td></tr>
+    <tr><td><code>server.py</code></td><td class="num">693</td>
+        <td><code>Jail</code> (กักขอบเขต path), <code>RateLimiter</code>, <code>Session</code> (state machine), <code>serve()</code> (accept loop)</td></tr>
+    <tr><td><code>client.py</code></td><td class="num">722</td>
+        <td>นโยบายการปักหมุด, <code>download()</code>/<code>upload()</code> และ <code>Shell</code></td></tr>
+    <tr><td><code>term.py</code></td><td class="num">360</td>
+        <td>ทุกไบต์ที่แสดงต่อผู้ใช้ มีที่เดียวที่ต้องรองรับ <code>--no-color</code></td></tr>
+    <tr><td><code>bootstrap.py</code></td><td class="num">287</td>
+        <td>รีสตาร์ตเข้าสู่ Python ที่ <code>import cryptography</code> ได้</td></tr>
+  </tbody>
+</table>
+
+<div class="callout">
+  <span class="label">การตัดสินใจเชิงโครงสร้างที่สำคัญที่สุด</span>
+  <p><code>protocol.py</code> <strong>ถูก import โดยทั้งไคลเอนต์และเซิร์ฟเวอร์</strong>
+  ทั้งโปรเจกต์จึงมี encoder ตัวเดียวและ decoder ตัวเดียวเท่านั้น นั่นแปลว่าสองฝั่ง
+  เข้าใจรูปแบบข้อมูลไม่ตรงกัน<em>ไม่ได้เลยในเชิงกายภาพ</em> ถ้าแก้ framing
+  ทั้งสองฝั่งจะพังพร้อมกันทันทีในชุดทดสอบ</p>
+</div>
+
+<h3>2.3 โมเดลการทำงานพร้อมกัน</h3>
+
+<pre><code>                   main thread
+                        |
+              listener.accept()   (timeout 0.5 วินาที วนถาม)
+                        |
+             semaphore: ยังมีช่องว่างใน 8 ช่องไหม?
+               /                    \
+             ไม่มี                    มี
+              |                        |
+        TLS handshake,           สร้าง worker thread
+        ตอบ 503, ปิด                    |
+                                  TLS 1.3 handshake
+                                         |
+                                  Session(...).run()
+                                         |
+                                    คืนช่องว่าง</code></pre>
+
+<ul>
+  <li><strong>หนึ่ง thread ต่อหนึ่ง connection</strong> — เหมาะกับงานนี้เพราะ session
+      มีอายุยาว มีสถานะ และถูกครอบงำด้วย blocking I/O บน socket และไฟล์
+      การใช้ event loop ไม่ได้ประโยชน์อะไรที่ 8 ไคลเอนต์พร้อมกัน แต่แลกมาด้วย
+      ความซับซ้อนของโค้ดอย่างมาก</li>
+  <li><strong><code>threading.Semaphore</code> จำกัดจำนวนพร้อมกัน</strong> ที่
+      <code>--max-clients</code> (ค่าเริ่มต้น 8) ไคลเอนต์ที่เกินจะถูกปฏิเสธด้วย
+      <code>503 SERVICE UNAVAILABLE</code> — และคำปฏิเสธนั้นถูกส่ง<em>ภายใน TLS</em>
+      จึงเป็นการตอบตามโปรโตคอลจริง ไม่ใช่การตัดการเชื่อมต่อทิ้งเฉย ๆ</li>
+  <li><strong><code>RateLimiter</code> ต่อ connection</strong> (fixed window, ปิดไว้เป็นค่าเริ่มต้น)
+      ตอบ <code>429 TOO MANY REQUESTS</code> พร้อมเฮดเดอร์ <code>retry-after</code></li>
+  <li><strong>socket มี timeout 300 วินาที</strong> ไคลเอนต์ที่หายไปกลางคันจึงคืนช่องว่างให้ระบบ</li>
+  <li><strong>accept loop ใช้การวนถามด้วย timeout 0.5 วินาที แทนการบล็อก</strong> —
+      เป็นการแก้ปัญหาเฉพาะของ Windows ที่ไม่ขัดจังหวะ blocking socket call เมื่อกด Ctrl+C</li>
+</ul>
+
+<h3>2.4 ลักษณะของทราฟฟิกและการใช้ทรัพยากร</h3>
+
+<ul>
+  <li><strong>ทราฟฟิกไม่สมมาตรอย่างรุนแรง</strong> — ข้อความควบคุมมีขนาดหลักร้อยไบต์
+      แต่ body ของการโอนไฟล์มีขนาดหลายกิกะไบต์ การออกแบบจึงต้องแยกสองสิ่งนี้ออกจากกัน</li>
+  <li><strong>สตรีมเป็นบล็อกขนาดคงที่ 256 KiB</strong> ข้อมูลไม่เคยถูกโหลดเข้าหน่วยความจำทั้งไฟล์
+      และค่า hash ถูกคำนวณไปพร้อมกับการสตรีม จึงไม่ต้องอ่านข้อมูลซ้ำอีกรอบเพื่อตรวจสอบ</li>
+  <li><strong>หน่วยความจำคงที่</strong> — ไฟล์ 40 GB ใช้หน่วยความจำเท่ากับไฟล์ 4 KB</li>
+  <li><strong>หลายคำสั่งต่อหนึ่ง connection</strong> — TLS handshake และการจับคู่เกิดขึ้นครั้งเดียว
+      ต้นทุนนั้นถูกกระจายไปทั่วทั้ง session</li>
+</ul>
+
+<h3>2.5 แบบจำลองภัยคุกคาม</h3>
+
+<p>ผู้โจมตีที่โปรแกรมนี้ป้องกัน คือ<strong>เครื่องอื่นบนเครือข่าย Wi-Fi เดียวกัน</strong>
+ที่สามารถดักฟังทราฟฟิกทั้งหมด และสามารถแทรกตัวอยู่กลางทางเพื่อปลอมเป็นเซิร์ฟเวอร์ได้
+แต่ <em>ไม่</em> รู้รหัสจับคู่ที่ถูกอ่านออกจากหน้าจอ</p>
+
+<table>
+  <thead><tr><th style="width:42%">ป้องกันได้</th><th>ไม่ได้ป้องกัน</th></tr></thead>
+  <tbody>
+    <tr>
+      <td>
+        การดักฟังแบบเฉย ๆ (TLS 1.3)<br>
+        การแทรกกลางทาง (proof ผูกกับใบรับรอง)<br>
+        การดัดแปลงข้อมูลระหว่างทาง (SHA-256)<br>
+        การหลุดออกนอกไดเรกทอรีที่แชร์ (Jail)<br>
+        การ replay proof ข้าม connection (nonce)
+      </td>
+      <td>
+        ผู้ที่อ่านไฟล์ <code>known_hosts.json</code> ได้ (เทียบเท่ากุญแจส่วนตัวของ SSH)<br>
+        การวิเคราะห์ปริมาณทราฟฟิก (รู้ขนาดและเวลาของทุกการโอน)<br>
+        การเพิกถอนสิทธิ์รายบุคคล (หมุนรหัสใหม่เพิกถอนทุกคนพร้อมกัน)<br>
+        การรั่วไหลของรหัสจับคู่จากวิธีที่ผู้ใช้แชร์มันเอง
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<!-- ═══════════════════════ 3 ═══════════════════════ -->
+<h2 class="newpage">3. Service Model ของ Transport Layer: เลือก TCP เพราะอะไร</h2>
+
+<div class="answer">
+  <span class="label">คำตอบโดยย่อ</span>
+  <p>เลือก <strong>TCP</strong> — <code>AF_INET</code> + <code>SOCK_STREAM</code>
+  พอร์ตเริ่มต้น 5150 ด้วยเหตุผลสองชั้นที่เป็นอิสระจากกัน และแต่ละชั้นเพียงพอในตัวเอง:</p>
+  <p><strong>(1)</strong> ความต้องการของแอปพลิเคชันทั้งหกข้อ ตรงกับการรับประกันของ TCP พอดี
+  การสร้างสิ่งเหล่านี้ขึ้นบน UDP ก็คือการเขียน TCP ขึ้นมาใหม่ให้แย่ลง<br>
+  <strong>(2)</strong> TLS 1.3 ทำงานบน TCP และมีในไลบรารีมาตรฐานของ Python
+  ขณะที่ DTLS ซึ่งเป็นส่วนเทียบเท่าบน UDP <em>ไม่มีให้ใช้เลย</em>
+  การเลือก UDP จึงเท่ากับต้องเขียนวิทยาการรหัสลับเอง หรือปล่อยโปรแกรมโดยไม่มีการเข้ารหัส</p>
+</div>
+
+<h3>3.1 ความต้องการที่แท้จริงของแอปพลิเคชัน</h3>
+
+<p>ก่อนจะเลือก ต้องระบุความต้องการในรูปของ<strong>คุณสมบัติ</strong>
+ไม่ใช่ในรูปของชื่อโปรโตคอล มิฉะนั้นการเลือกจะกลายเป็นการอ้างธรรมเนียมปฏิบัติ
+ไม่ใช่การให้เหตุผล</p>
+
+<table>
+  <thead>
+    <tr><th style="width:6%">#</th><th style="width:26%">ความต้องการ</th><th>ทำไมการรับส่งไฟล์จึงต้องการ</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>R1</td><td><strong>ข้อมูลต้องไม่สูญหาย</strong></td>
+        <td>ไฟล์ที่ขาดไปหนึ่งไบต์ ไม่ใช่ไฟล์ที่แย่ลงนิดหน่อย แต่คือไฟล์เสีย</td></tr>
+    <tr><td>R2</td><td><strong>ส่งถึงตามลำดับ</strong></td>
+        <td>ไบต์ที่ 5,000,001 ต้องถูกเขียนหลังไบต์ที่ 5,000,000 ไม่งั้นไฟล์เละ</td></tr>
+    <tr><td>R3</td><td><strong>ไม่ซ้ำ</strong></td>
+        <td>บล็อกที่ส่งซ้ำแล้วถูกเขียนสองครั้ง จะเลื่อนทุกอย่างหลังจากนั้นทั้งหมด</td></tr>
+    <tr><td>R4</td><td><strong>Flow control</strong></td>
+        <td>เครื่องที่อ่านจาก SSD ผลิตข้อมูลได้เร็วกว่าที่แล็ปท็อปซึ่งเขียนลงดิสก์ช้า ๆ จะรับไหว ต้องมีกลไกดันกลับ</td></tr>
+    <tr><td>R5</td><td><strong>Congestion control</strong></td>
+        <td>การอัดข้อมูลเต็มลิงก์ที่ใช้ร่วมกันโดยไม่ยอมถอย เป็นการเอาเปรียบผู้อื่น และในระดับใหญ่ทำให้เกิด congestion collapse</td></tr>
+    <tr><td>R6</td><td><strong>ความหมายของ connection</strong></td>
+        <td>session มีสถานะ — ทักทายแล้ว, พิสูจน์ตัวตนแล้ว, พร้อมทำงาน ทั้งสองฝั่งต้องเห็นตรงกันว่ามี connection อยู่ และจบเมื่อไร</td></tr>
+    <tr><td>R7</td><td><strong>ความลับและการพิสูจน์ตัวตน</strong></td>
+        <td>แบบจำลองภัยคุกคามคือเครื่องอื่นบน Wi-Fi เดียวกัน</td></tr>
+    <tr><td>R8</td><td><strong>ความถูกต้องแบบ end-to-end</strong></td>
+        <td>ไฟล์ที่ลงจอดต้องพิสูจน์ได้ว่าเป็นไฟล์เดียวกับที่ส่งมา</td></tr>
+  </tbody>
+</table>
+
+<p><strong>สิ่งที่ไม่ต้องการ:</strong> latency ที่มีขอบเขตแน่นอน, throughput ขั้นต่ำ
+ที่รับประกัน หรือกำหนดเวลาส่งถึงที่ตายตัว — ข้อสังเกตนี้กลายเป็นจุดชี้ขาด (ดู §3.6)</p>
+
+<h3>3.2 Service model สองแบบที่มีให้เลือก</h3>
+
+<table>
+  <thead>
+    <tr><th style="width:26%">คุณสมบัติ</th><th style="width:39%">TCP</th><th>UDP</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>การสร้าง connection</td><td>มี — three-way handshake และการปิดอย่างชัดเจน</td><td>ไม่มี แต่ละ datagram เป็นอิสระ</td></tr>
+    <tr><td>การรับประกันการส่งถึง</td><td>เชื่อถือได้: ACK, timeout, retransmission</td><td>Best-effort อาจสูญหาย</td></tr>
+    <tr><td>ลำดับ</td><td>รับประกัน ด้วย sequence number</td><td>ไม่มี อาจสลับลำดับ</td></tr>
+    <tr><td>การตัดข้อมูลซ้ำ</td><td>มี</td><td>ไม่มี</td></tr>
+    <tr><td>นามธรรมที่ให้</td><td><strong>สตรีมไบต์ที่เชื่อถือได้</strong> แบบ full-duplex</td><td><strong>ข้อความ (datagram)</strong> ที่ไม่เชื่อถือได้</td></tr>
+    <tr><td>Flow control</td><td>มี — receive window</td><td>ไม่มี</td></tr>
+    <tr><td>Congestion control</td><td>มี — AIMD, slow start</td><td>ไม่มี</td></tr>
+    <tr><td>ขนาดเฮดเดอร์</td><td>20 ไบต์</td><td>8 ไบต์</td></tr>
+    <tr><td>รับประกันเวลา / throughput</td><td><strong>ไม่มี</strong></td><td><strong>ไม่มี</strong></td></tr>
+    <tr><td>ความปลอดภัย</td><td><strong>ไม่มี</strong></td><td><strong>ไม่มี</strong></td></tr>
+  </tbody>
+</table>
+
+<h3>3.3 การจับคู่ความต้องการกับกลไกของ TCP</h3>
+
+<pre><code>listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)   # server.py
+listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+listener.bind((cfg.host, cfg.port))
+listener.listen(16)</code></pre>
+
+<table>
+  <thead>
+    <tr><th style="width:22%">ความต้องการ</th><th style="width:37%">กลไกของ TCP ที่ตอบสนอง</th><th>ต้นทุนถ้าเลือก UDP</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>R1 ไม่สูญหาย</td><td>Retransmission เมื่อ ACK timeout / duplicate ACK</td>
+        <td>ต้องเขียน sequence number, ACK, retransmission timer, การประมาณ RTT เอง</td></tr>
+    <tr><td>R2 ตามลำดับ</td><td>Sequence number และการประกอบใหม่ฝั่งรับ</td>
+        <td>ต้องเขียน reorder buffer เอง</td></tr>
+    <tr><td>R3 ไม่ซ้ำ</td><td>Sequence number</td>
+        <td>ต้องเขียนการตรวจจับข้อมูลซ้ำเอง</td></tr>
+    <tr><td>R4 Flow control</td><td>Receive window (<code>rwnd</code>)</td>
+        <td>ต้องเขียน windowing และการประกาศ window เอง</td></tr>
+    <tr><td>R5 Congestion control</td><td>AIMD, slow start, fast recovery</td>
+        <td>ต้องเขียน congestion window และนโยบายถอยเอง</td></tr>
+    <tr><td>R6 ความหมาย connection</td><td>Three-way handshake และการปิดด้วย FIN</td>
+        <td>ต้องเขียนการสร้าง session และ timeout เอง</td></tr>
+  </tbody>
+</table>
+
+<div class="callout">
+  <span class="label">ข้อโต้แย้งทั้งหมดรวมอยู่ในคอลัมน์ขวามือ</span>
+  <p>รายการในคอลัมน์ขวา <strong>ก็คือ TCP นั่นเอง</strong> การทำ R1–R6 บน UDP
+  คือการเขียน TCP ขึ้นมาใหม่ — และจะเป็นเวอร์ชันที่นักศึกษาคนเดียวเขียนในหนึ่งเทอม
+  ไม่เคยผ่านการตรวจสอบ และรันบนเครือข่ายเดียวเท่านั้น ส่วน TCP ของจริง
+  ถูกโจมตีและตรวจสอบมาตั้งแต่ปี 1981 และอยู่ใน kernel ซึ่งมองเห็น socket buffer
+  และ timer ได้อย่างถูกต้อง</p>
+</div>
+
+<h3>3.4 เหตุผลชี้ขาด: TLS 1.3 ทำงานบน TCP</h3>
+
+<p>ยังมีเหตุผลที่สองที่ปิดประเด็นนี้อย่างสิ้นเชิง และเป็นข้อที่ควรเน้น</p>
+
+<p><strong>TLS 1.3 ทำงานบน TCP</strong> และไลบรารีมาตรฐานของ Python เปิดให้ใช้
+โค้ดของโครงงานนี้จึงไม่ได้เขียนวิทยาการรหัสลับเองแม้แต่บรรทัดเดียว —
+มันเพียง <em>ตั้งค่า</em> สแต็กที่ผ่านการตรวจสอบมาแล้ว</p>
+
+<pre><code>ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+ctx.minimum_version = ssl.TLSVersion.TLSv1_3      # ไม่ยอมรับอะไรที่ต่ำกว่านี้
+ctx.load_cert_chain(cert_path, key_path)</code></pre>
+
+<p><strong>ส่วนที่เทียบเท่าบน UDP คือ DTLS และโมดูล <code>ssl</code> ของ Python
+ไม่เปิดให้ใช้เลย</strong> การเลือก UDP จึงบังคับให้เกิดผลอย่างใดอย่างหนึ่ง</p>
+
+<ol>
+  <li><strong>เขียน record layer และ key exchange ขึ้นเอง</strong> ซึ่งเป็นวิธีที่แน่นอนที่สุด
+      ในการสร้างวิทยาการรหัสลับที่พัง และเป็นความผิดพลาดที่วรรณกรรมด้านความปลอดภัย
+      ทั้งหมดเตือนไว้ หรือ</li>
+  <li><strong>ปล่อยโปรแกรมโดยไม่มีการเข้ารหัส</strong> ซึ่งก็คือ KUFT เวอร์ชันหนึ่ง
+      สิ่งที่เวอร์ชันนี้เกิดมาเพื่อแทนที่</li>
+</ol>
+
+<p>ทั้งสองทางรับไม่ได้ TCP จึงไม่ใช่แค่ตัวเลือกที่ดีกว่า
+แต่<strong>เป็นตัวเลือกเดียวที่ทำให้โครงงานนี้มีการเข้ารหัสได้เลย</strong></p>
+
+<h3>3.5 ช่องว่างใน service model ของ TCP ที่ต้องเติมเอง</h3>
+
+<p>TCP ไม่ได้แก้ทุกอย่างให้ Service model ของมันไม่สมบูรณ์สำหรับแอปพลิเคชันนี้
+อยู่ห้าข้อ และแต่ละช่องว่างถูกเติมอย่างจงใจที่ชั้น Application</p>
+
+<table>
+  <thead>
+    <tr><th style="width:30%">ช่องว่าง</th><th style="width:34%">ทำไมจึงเป็นปัญหา</th><th>สิ่งที่ KUFT เติมเข้าไป</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>สตรีมไบต์ไม่มีขอบเขตข้อความ</strong></td>
+      <td><code>send</code> กับ <code>recv</code> ไม่สอดคล้องกัน หนึ่ง write อาจมาถึงเป็นสามการอ่าน หรือสาม write อาจมาถึงเป็นครั้งเดียว ฝ่ายรับจึงบอกไม่ได้ว่าข้อความจบตรงไหน</td>
+      <td>Framing ที่ชัดเจน: ส่วนหัวจบด้วยบรรทัดว่าง บวก <code>content-length</code> ที่บังคับมี (§4.2)</td>
+    </tr>
+    <tr>
+      <td><strong>TCP checksum อ่อนแอและครอบคลุมแค่ทีละ hop</strong></td>
+      <td>เป็นผลรวมแบบ one's-complement 16 บิต ออกแบบมาจับสัญญาณรบกวน คำนวณต่อ segment และ<em>ถูกคำนวณใหม่โดยอุปกรณ์กลางทางทุกตัว</em> การแก้ไขของผู้โจมตีเชิงรุกจึงผ่านฉลุย</td>
+      <td>SHA-256 แบบ end-to-end ทั้งต่อช่วงข้อมูลและต่อไฟล์ทั้งไฟล์ (§4.11)</td>
+    </tr>
+    <tr>
+      <td><strong>ไม่มีความลับและไม่มีการพิสูจน์ตัวตน</strong></td>
+      <td>TCP ส่ง plaintext ทั้งหมด และไม่รู้ว่าปลายทางเป็นใคร</td>
+      <td>TLS 1.3 บวกกลไกจับคู่ที่ผูก proof เข้ากับใบรับรอง (§4.10)</td>
+    </tr>
+    <tr>
+      <td><strong>รู้แค่ว่า "เชื่อมต่อแล้ว" ไม่รู้ว่า "พิสูจน์ตัวตนแล้ว"</strong></td>
+      <td>TCP connection ที่เปิดอยู่ไม่ได้แปลว่าคู่สนทนามีสิทธิ์ทำอะไรก็ได้</td>
+      <td>State machine ระดับแอปพลิเคชัน: ทุกคำสั่งยกเว้น <code>HELLO</code> และ <code>AUTH</code> ตอบ <code>401</code> จนกว่า proof จะผ่าน (§4.12)</td>
+    </tr>
+    <tr>
+      <td><strong>connection ที่ขาดทำให้เสียการโอนทั้งครั้ง</strong></td>
+      <td>TCP กู้คืน <em>segment</em> ไม่ใช่ <em>ไฟล์</em> ถ้า connection ตาย ดาวน์โหลด 4 GB ที่เดินมาถึง 90% ต้องเริ่มใหม่จากศูนย์</td>
+      <td>เก็บไฟล์ <code>.part</code> ที่ยังไม่ครบไว้ แล้วเริ่มต่อด้วยเฮดเดอร์ <code>range</code> (§4.11)</td>
+    </tr>
+  </tbody>
+</table>
+
+<h3>3.6 สิ่งที่ TCP ไม่รับประกัน แต่เราไม่ต้องการ</h3>
+
+<p>TCP จงใจ<strong>ไม่รับประกัน throughput ขั้นต่ำและไม่รับประกันขอบเขต latency</strong>
+สำหรับแอปพลิเคชันจำนวนมากนั่นคือข้อจำกัดที่แท้จริง แต่ที่นี่มันไม่เสียหายอะไรเลย
+และเหตุผลควรพูดให้ตรง</p>
+
+<div class="callout">
+  <p><strong>ในการรับส่งไฟล์ ไบต์ที่มาช้ามีค่าเท่ากับไบต์ที่มาตรงเวลาทุกประการ</strong></p>
+  <p>ไม่มีอะไรถูกนำไปใช้จนกว่าไฟล์ทั้งไฟล์จะมาถึงและ hash ผ่าน การโอนที่หยุดชะงัก
+  ไปสองวินาทีแล้วไปต่อ ให้ผลลัพธ์เหมือนกันทุกไบต์ ดังนั้นการที่ TCP ยอมแลก latency
+  เพื่อความน่าเชื่อถือ — รอ retransmission หรือลด congestion window ลงครึ่งหนึ่ง —
+  เป็นการแลกที่โครงงานนี้ <em>ยินดีเสมอ</em></p>
+</div>
+
+<h3>3.7 กรณีที่ UDP จะเป็นคำตอบที่ถูกต้อง</h3>
+
+<p>UDP ถูกต้องเมื่อ <strong>datagram ที่มาช้าถือว่าไร้ค่า ไม่ใช่แค่ล่าช้า</strong></p>
+
+<table>
+  <thead><tr><th style="width:26%">กรณี</th><th>เหตุผล</th></tr></thead>
+  <tbody>
+    <tr><td>เสียงและวิดีโอสด</td><td>แพ็กเก็ตที่มาช้า 400 ms ไม่เหลือช่วงเวลาให้เล่นแล้ว การกลบช่องว่างดีกว่าการรอ</td></tr>
+    <tr><td>สถานะเกม</td><td>ข้อมูลอัปเดตชิ้นถัดไปแทนที่ชิ้นก่อนหน้า การส่งสถานะเก่าซ้ำมีแต่โทษ</td></tr>
+    <tr><td>DNS</td><td>การทำ handshake แพงกว่าตัวคำถามเสียอีก</td></tr>
+    <tr><td>Multicast / Broadcast</td><td>TCP ทำไม่ได้เลยโดยธรรมชาติ เพราะเป็นโปรโตคอลแบบจุดต่อจุด</td></tr>
+  </tbody>
+</table>
+
+<p><strong>ไม่มีข้อไหนตรงกับการย้ายไฟล์</strong> อย่างไรก็ตาม มีจุดเดียวในโครงงานนี้
+ที่ UDP จะเป็นคำตอบที่ถูกต้องจริง ๆ คือ <strong>mDNS service discovery</strong>
+เพื่อไม่ต้องพิมพ์หมายเลข IP — เพราะเป็นงานแบบ best-effort, multicast
+และลองใหม่ที่ชั้นแอปพลิเคชันได้ แต่ยังไม่ได้ทำในเวอร์ชันนี้</p>
+
+<!-- ═══════════════════════ 4 ═══════════════════════ -->
+<h2 class="newpage">4. การออกแบบ Application-Layer Protocol</h2>
+
+<p>หัวข้อนี้คือข้อกำหนดของโปรโตคอล KUFT/2.0 อย่างละเอียด ครอบคลุมรูปแบบข้อความ
+ชุดคำสั่ง เฮดเดอร์ รหัสสถานะ และ <strong>request/response messages ทุกคู่</strong>
+ที่ใช้สื่อสารระหว่าง Client และ Server</p>
+
+<h3>4.1 ข้อจำกัดที่การออกแบบต้องทำให้ได้</h3>
+
+<ol>
+  <li><strong>Framing ต้องไม่ขึ้นกับเนื้อหาของ body</strong> — ไฟล์ไบนารีมีทุกไบต์ที่เป็นไปได้
+      รวมทั้ง CRLF และ NUL การแบ่งข้อความต้องไม่ถูกรบกวนจากเนื้อหาไฟล์</li>
+  <li><strong>ต้องสตรีมได้</strong> — ห้ามโหลดไฟล์ทั้งไฟล์เข้าหน่วยความจำ</li>
+  <li><strong>ต้องรองรับชื่อไฟล์ทุกแบบ</strong> — เว้นวรรค วงเล็บ อักษรไทย อีโมจิ</li>
+  <li><strong>ต้องอ่านได้จาก packet capture</strong> — เพื่อให้ดีบักและตรวจสอบได้</li>
+  <li><strong>ต้องกันการใช้หน่วยความจำไม่จำกัด</strong> — คู่สนทนาที่ไม่หวังดีต้องทำให้
+      เซิร์ฟเวอร์จองหน่วยความจำไม่จำกัดไม่ได้</li>
+</ol>
+
+<h3>4.2 รูปแบบข้อความ</h3>
+
+<p>ข้อความของ KUFT คือ <strong>ส่วนหัวที่เป็นข้อความ บรรทัดว่างหนึ่งบรรทัด
+แล้วตามด้วย body ไบนารีที่นับจำนวนไว้แล้ว</strong></p>
+
+<pre><code>message   = head CRLF [ body ]
+head      = start-line CRLF *( header CRLF )
+header    = field-name ":" OWS field-value</code></pre>
+
+<ul>
+  <li><code>start-line</code> เป็น US-ASCII</li>
+  <li>ชื่อเฮดเดอร์ไม่สนใจตัวพิมพ์เล็กใหญ่ และถูกแปลงเป็นตัวพิมพ์เล็กเมื่อรับ</li>
+  <li>ค่าเฮดเดอร์เป็น UTF-8 และ<strong>ต้องไม่มี CR หรือ LF</strong>
+      ตัว encoder จะปฏิเสธที่จะ<em>เข้ารหัส</em>ค่าที่มีอักขระเหล่านี้
+      ซึ่งเป็นสิ่งที่ปิดช่องโหว่ header injection</li>
+  <li>ส่วนหัวจบที่บรรทัดว่างแรก</li>
+  <li>มี body <strong>ก็ต่อเมื่อ</strong> มีเฮดเดอร์ <code>content-length</code> ที่ไม่เป็นศูนย์
+      body มีขนาดเท่านั้นพอดี และไม่ถูกตีความใด ๆ จึงมี CRLF, NUL
+      หรือไบต์อะไรก็ได้โดยไม่ต้อง escape</li>
+</ul>
+
+<div class="callout">
+  <span class="label">ทำไมจึงเลือกรูปทรงแบบ HTTP</span>
+  <p>นี่คือรูปแบบของ HTTP และการหยิบยืมนี้เป็นความตั้งใจ: มันคือ framing
+  ชั้นแอปพลิเคชันที่ประสบความสำเร็จที่สุดเท่าที่เคยมีการใช้งานมา อ่านออกได้ทันที
+  และคุณสมบัติของมันเป็นที่เข้าใจกันดี สิ่งที่ <strong>ไม่ได้</strong> หยิบยืมมา
+  คือความซับซ้อนที่ HTTP สะสมมา — ไม่มี chunked encoding, ไม่มี content negotiation,
+  ไม่มี cookie, ไม่มี caching</p>
+  <p><strong>ทางเลือกที่พิจารณาแล้วไม่เลือก:</strong> <em>binary TLV</em> กะทัดรัดดี
+  แต่มองไม่เห็นใน packet capture และไบต์ที่ประหยัดได้ไม่มีความหมายเลยเมื่อเทียบกับ
+  body ขนาดหลายกิกะไบต์ · <em>JSON</em> บรรทุกข้อมูลไบนารีดิบไม่ได้ถ้าไม่ base64
+  ซึ่งเพิ่มขนาด 33% ในทุก ๆ ไฟล์</p>
+</div>
+
+<h3>4.3 Request line และ Status line</h3>
+
+<h4>Request line</h4>
+<pre><code>request-line = method SP target SP "KUFT/2.0"</code></pre>
+
+<p><code>target</code> ถูก <strong>percent-encode</strong>: ทุกอ็อกเท็ตที่อยู่นอก
+<code>A-Z a-z 0-9 / * - . _ ~</code> ถูกเขียนเป็น <code>%XX</code> บนการเข้ารหัส UTF-8
+ของมัน สิ่งนี้รับประกันว่า request line มี <strong>สาม token คั่นด้วยช่องว่างเสมอ</strong>
+ไม่ว่าไฟล์จะชื่ออะไร และทำให้ชื่อ Unicode ทุกแบบโอนได้ครบถ้วน</p>
+
+<pre><code>GET /Quarterly%20Report%20(final).pdf KUFT/2.0
+PUT /%E0%B8%A3%E0%B8%B2%E0%B8%A2%E0%B8%87%E0%B8%B2%E0%B8%99.txt KUFT/2.0</code></pre>
+
+<h4>Status line</h4>
+<pre><code>status-line = "KUFT/2.0" SP status-code SP reason-phrase</code></pre>
+
+<h3>4.4 การตัดสินใจสี่ข้อเรื่อง framing</h3>
+
+<table>
+  <thead>
+    <tr><th style="width:30%">การตัดสินใจ</th><th>ผลที่ตามมา</th></tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><strong>1. ส่วนหัวเป็น ASCII และจบที่บรรทัดว่างแรก</strong></td>
+      <td>Parser <strong>ไม่เคยตรวจสอบ body เลย</strong> ไฟล์จึงมี CRLF, NUL หรืออะไรก็ได้
+      โดยไม่ต้อง escape และไม่มีต้นทุน ถ้าใช้ end marker แทน จะต้องสแกนหา marker ใน body
+      ซึ่งแปลว่าต้อง escape marker ภายใน body ซึ่งแปลว่า framing ขึ้นกับเนื้อหา
+      นั่นคือกฎที่ยืนยันว่าจะไม่ยอมละเมิด</td>
+    </tr>
+    <tr>
+      <td><strong>2. <code>content-length</code> บังคับมีเสมอเมื่อมี body</strong></td>
+      <td>ฝ่ายรับรู้แน่นอนว่าต้องอ่านกี่ไบต์ และไม่ต้องเดาว่าข้อความจบตรงไหน
+      ทำให้ส่งข้อความติด ๆ กันบน connection เดียวได้อย่างปลอดภัย และเป็นสิ่งที่ทำให้
+      สตรีมได้ — อ่านตามจำนวนที่รู้แล้ว ทีละบล็อก 256 KiB ตรงเข้าไฟล์ปลายทาง
+      คำนวณ hash ไปด้วยระหว่างทาง <strong>ไฟล์ 40 GB ใช้หน่วยความจำเท่ากับไฟล์ 4 KB</strong></td>
+    </tr>
+    <tr>
+      <td><strong>3. Target ถูก percent-encode</strong></td>
+      <td>รับประกันว่า request line มีสาม token เสมอ ถ้าไม่มีมัน
+      <code>GET Quarterly Report final.pdf KUFT/2.0</code> จะถูกแยกเป็นห้า token
+      และ parse ไม่ผ่าน — ซึ่งเป็นจุดที่เวอร์ชันหนึ่งพังจริง ๆ</td>
+    </tr>
+    <tr>
+      <td><strong>4. ทุกความยาวที่คู่สนทนามีอิทธิพลต่อได้ มีเพดานตายตัว</strong></td>
+      <td>คู่สนทนาที่ส่งบรรทัดเฮดเดอร์โดยไม่มีตัวจบบรรทัด จะทำให้เซิร์ฟเวอร์
+      จองหน่วยความจำไม่จำกัดไม่ได้ (ดู §4.5)</td>
+    </tr>
+  </tbody>
+</table>
+
+<div class="callout">
+  <span class="label">กฎเล็ก ๆ ที่ปิดช่องโหว่จริง</span>
+  <p><strong>ตัว encoder ปฏิเสธที่จะส่งค่าเฮดเดอร์ที่มี CR หรือ LF</strong>
+  ถ้าไม่มีข้อนี้ ชื่อไฟล์ที่มีตัวขึ้นบรรทัดใหม่อยู่ข้างในสามารถแทรกเฮดเดอร์ปลอม
+  หรือแทรกแม้กระทั่ง status line ปลอม เข้าไปในคำตอบได้ การปฏิเสธตั้งแต่ตอน encode
+  หมายความว่าไม่มีผู้เรียกใช้รายไหนเปิดช่องโหว่นี้ได้เลย</p>
+</div>
+
+<h3>4.5 ขีดจำกัดที่บังคับใช้</h3>
+
+<table>
+  <thead><tr><th style="width:36%">ขีดจำกัด</th><th style="width:34%">ค่า</th><th>บังคับด้วย</th></tr></thead>
+  <tbody>
+    <tr><td>บรรทัดควบคุม</td><td>8192 อ็อกเท็ต</td><td><code>400</code></td></tr>
+    <tr><td>จำนวนเฮดเดอร์ต่อข้อความ</td><td>64</td><td><code>400</code></td></tr>
+    <tr><td>Control body (listing, proof)</td><td>4 MiB</td><td><code>413</code></td></tr>
+    <tr><td>Upload body</td><td><code>--max-upload</code> ของเซิร์ฟเวอร์ (ค่าเริ่มต้น 8 GiB)</td><td><code>413</code></td></tr>
+    <tr><td>ขนาดบล็อกในการโอน</td><td>256 KiB</td><td>—</td></tr>
+  </tbody>
+</table>
+
+<h3>4.6 ชุดคำสั่ง (Methods)</h3>
+
+<p>เก้าคำสั่งสำหรับการทำงาน บวก <code>QUIT</code> เลือกให้แต่ละคำสั่งจับคู่กับ
+ปฏิบัติการบนระบบไฟล์หนึ่งอย่างพอดี และไม่มีคำสั่งใดครอบคลุมคำสั่งอื่น</p>
+
+<table>
+  <thead>
+    <tr><th style="width:14%">Method</th><th style="width:16%">Target</th><th style="width:12%">Body</th><th>จุดประสงค์</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>HELLO</code></td><td><code>*</code></td><td>—</td><td>ตกลงความสามารถ รับ salt และ server nonce</td></tr>
+    <tr><td><code>AUTH</code></td><td><code>*</code></td><td>—</td><td>พิสูจน์ว่ารู้รหัสจับคู่ และรับ proof จากเซิร์ฟเวอร์</td></tr>
+    <tr><td><code>LIST</code></td><td>ไดเรกทอรี</td><td>—</td><td>รายการไฟล์ในรูปแถวคั่นด้วย tab</td></tr>
+    <tr><td><code>STAT</code></td><td>ไฟล์</td><td>—</td><td>ขนาด เวลาแก้ไข checksum โดยไม่โอนข้อมูล</td></tr>
+    <tr><td><code>GET</code></td><td>ไฟล์</td><td>—</td><td>ดาวน์โหลด; <code>range: N</code> ขอเฉพาะส่วนท้าย</td></tr>
+    <tr><td><code>PUT</code></td><td>ไฟล์</td><td>payload</td><td>อัปโหลด; ปรับพฤติกรรมด้วย <code>overwrite</code>, <code>range</code></td></tr>
+    <tr><td><code>DELETE</code></td><td>path</td><td>—</td><td>ลบไฟล์หรือไดเรกทอรีว่าง</td></tr>
+    <tr><td><code>MKDIR</code></td><td>ไดเรกทอรี</td><td>—</td><td>สร้างไดเรกทอรี</td></tr>
+    <tr><td><code>MOVE</code></td><td>path</td><td>—</td><td>เปลี่ยนชื่อ/ย้าย; เฮดเดอร์ <code>destination</code> ระบุปลายทาง</td></tr>
+    <tr><td><code>QUIT</code></td><td><code>*</code></td><td>—</td><td>ปิดการเชื่อมต่ออย่างสุภาพ</td></tr>
+  </tbody>
+</table>
+
+<p><strong>สิ่งที่จงใจไม่มี:</strong> ไม่มี <code>COPY</code> (ใช้ <code>GET</code> +
+<code>PUT</code> ฝั่งไคลเอนต์), ไม่มี <code>APPEND</code> (ใช้ <code>PUT</code> พร้อม
+<code>range</code>), ไม่มี <code>CHMOD</code> (สิทธิ์ไม่อยู่ในแบบจำลอง)
+และไม่มี <code>DELETE</code> แบบวนลึก (ไดเรกทอรีที่ไม่ว่างจะได้ <code>409</code>)</p>
+
+<p><code>STAT</code> มีคุณค่าตรงที่ทำให้การปฏิเสธ <code>PUT</code> มีต้นทุนต่ำ:
+ไคลเอนต์ถามก่อน อัปโหลดขนาด 40 GB จึงไม่ถูกส่งขึ้นลิงก์ช้า ๆ
+เพื่อมาโดนปฏิเสธด้วย <code>409</code> ตอนจบ</p>
+
+<h3>4.7 เฮดเดอร์ทั้งหมด</h3>
+
+<table>
+  <thead>
+    <tr><th style="width:20%">เฮดเดอร์</th><th style="width:16%">ทิศทาง</th><th>ความหมาย</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>content-length</code></td><td>ทั้งสองทาง</td><td>ขนาด body เป็นอ็อกเท็ต บังคับมีเมื่อมี body</td></tr>
+    <tr><td><code>content-type</code></td><td>Server → Client</td><td>ชนิดของ body เช่น <code>application/octet-stream</code></td></tr>
+    <tr><td><code>detail</code></td><td>Server → Client</td><td>คำอธิบายที่มนุษย์อ่านได้ มีในทุกคำตอบ</td></tr>
+    <tr><td><code>salt</code></td><td>Server → Client</td><td>Salt สำหรับ PBKDF2 (base64) ใน <code>HELLO</code></td></tr>
+    <tr><td><code>nonce</code></td><td>ทั้งสองทาง</td><td>ค่าสุ่ม 32 อ็อกเท็ต (base64) ใหม่ทุก connection</td></tr>
+    <tr><td><code>proof</code></td><td>ทั้งสองทาง</td><td>HMAC-SHA256 (base64) ที่ผูกกับใบรับรอง</td></tr>
+    <tr><td><code>auth</code></td><td>Server → Client</td><td>วิธีพิสูจน์ตัวตนที่รองรับ ปัจจุบันคือ <code>pairing-code</code></td></tr>
+    <tr><td><code>server</code></td><td>Server → Client</td><td>ชื่อและเวอร์ชันของเซิร์ฟเวอร์</td></tr>
+    <tr><td><code>methods</code></td><td>Server → Client</td><td>รายการคำสั่งที่รองรับ คั่นด้วยจุลภาค</td></tr>
+    <tr><td><code>tls</code></td><td>Server → Client</td><td>เวอร์ชัน TLS ที่เจรจาได้จริง</td></tr>
+    <tr><td><code>read-only</code></td><td>Server → Client</td><td><code>true</code> ถ้าเซิร์ฟเวอร์ปฏิเสธการเขียนทั้งหมด</td></tr>
+    <tr><td><code>max-upload</code></td><td>Server → Client</td><td>ขนาดอัปโหลดสูงสุดที่ยอมรับ</td></tr>
+    <tr><td><code>checksum</code></td><td>ทั้งสองทาง</td><td><code>sha256=&lt;hex&gt;</code> ของช่วงข้อมูลที่ส่ง</td></tr>
+    <tr><td><code>whole-checksum</code></td><td>Server → Client</td><td><code>sha256=&lt;hex&gt;</code> ของไฟล์ทั้งไฟล์</td></tr>
+    <tr><td><code>size</code></td><td>Server → Client</td><td>ขนาดไฟล์ทั้งไฟล์เป็นอ็อกเท็ต</td></tr>
+    <tr><td><code>offset</code></td><td>Server → Client</td><td>ตำแหน่งเริ่มต้นของ body ภายในไฟล์</td></tr>
+    <tr><td><code>range</code></td><td>Client → Server</td><td>ขอข้อมูลตั้งแต่อ็อกเท็ตที่ N เป็นต้นไป</td></tr>
+    <tr><td><code>overwrite</code></td><td>Client → Server</td><td><code>true</code> เพื่ออนุญาตให้ <code>PUT</code> ทับไฟล์เดิม</td></tr>
+    <tr><td><code>destination</code></td><td>Client → Server</td><td>path ปลายทางของ <code>MOVE</code> (percent-encoded)</td></tr>
+    <tr><td><code>kind</code></td><td>Server → Client</td><td><code>file</code> หรือ <code>dir</code> ในคำตอบของ <code>STAT</code></td></tr>
+    <tr><td><code>modified</code></td><td>Server → Client</td><td>เวลาแก้ไขล่าสุดแบบ ISO 8601 UTC</td></tr>
+    <tr><td><code>count</code></td><td>Server → Client</td><td>จำนวนรายการในคำตอบของ <code>LIST</code></td></tr>
+    <tr><td><code>path</code></td><td>Server → Client</td><td>path ที่ resolve แล้ว แสดงเทียบกับรากที่แชร์</td></tr>
+    <tr><td><code>retry-after</code></td><td>Server → Client</td><td>จำนวนวินาทีที่ต้องรอ มากับ <code>429</code></td></tr>
+    <tr><td><code>connection</code></td><td>Server → Client</td><td><code>close</code> เมื่อเซิร์ฟเวอร์จะปิด connection</td></tr>
+  </tbody>
+</table>
+
+<h3>4.8 รหัสสถานะ (Status codes)</h3>
+
+<p>ใช้รหัสสามหลักตามคลาสของ HTTP เพื่อให้ <em>คลาส</em> มีความหมาย
+แม้ผู้รับจะไม่รู้จักรหัสเฉพาะตัวนั้น — <code>2xx</code> สำเร็จ,
+<code>4xx</code> เป็นความผิดของไคลเอนต์, <code>5xx</code> เป็นความผิดของเซิร์ฟเวอร์</p>
+
+<h4>Success</h4>
+<table>
+  <thead><tr><th style="width:9%">รหัส</th><th style="width:22%">วลี</th><th>เมื่อไร</th></tr></thead>
+  <tbody>
+    <tr><td>200</td><td>OK</td><td>คำขอสำเร็จ; <code>PUT</code> ทับไฟล์ที่มีอยู่แล้ว</td></tr>
+    <tr><td>201</td><td>CREATED</td><td><code>PUT</code> หรือ <code>MKDIR</code> สร้างของใหม่</td></tr>
+    <tr><td>204</td><td>NO CONTENT</td><td><code>DELETE</code> สำเร็จ</td></tr>
+    <tr><td>206</td><td>PARTIAL CONTENT</td><td><code>GET</code> ที่มี <code>range</code>; body เป็นส่วนท้ายของไฟล์</td></tr>
+  </tbody>
+</table>
+
+<h4>Client errors</h4>
+<table>
+  <thead><tr><th style="width:9%">รหัส</th><th style="width:26%">วลี</th><th>เมื่อไร</th></tr></thead>
+  <tbody>
+    <tr><td>400</td><td>BAD REQUEST</td><td>Framing ที่ parse ไม่ได้ — <strong>ปิด connection หลังจากนั้น</strong></td></tr>
+    <tr><td>401</td><td>UNAUTHORIZED</td><td>ยังไม่พิสูจน์ตัวตน หรือ proof ตรวจไม่ผ่าน</td></tr>
+    <tr><td>403</td><td>FORBIDDEN</td><td>path หลุดออกนอกไดเรกทอรีที่แชร์, เซิร์ฟเวอร์เป็น read-only, หรือเป้าหมายคือรากที่แชร์</td></tr>
+    <tr><td>404</td><td>NOT FOUND</td><td>ไม่มีไฟล์หรือไดเรกทอรีนั้น</td></tr>
+    <tr><td>405</td><td>METHOD NOT ALLOWED</td><td>คำสั่งที่ไม่รู้จัก</td></tr>
+    <tr><td>409</td><td>CONFLICT</td><td>เป้าหมายมีอยู่แล้วและไม่ได้ขอทับ; หรือไดเรกทอรีไม่ว่าง</td></tr>
+    <tr><td>413</td><td>PAYLOAD TOO LARGE</td><td>Body เกินขีดจำกัดที่ตั้งไว้</td></tr>
+    <tr><td>416</td><td>RANGE NOT SATISFIABLE</td><td><code>range</code> อยู่นอกขอบเขตไฟล์ หรือ offset ที่เซิร์ฟเวอร์จับคู่ไม่ได้</td></tr>
+    <tr><td><strong>422</strong></td><td><strong>CHECKSUM MISMATCH</strong></td><td>ข้อมูลที่รับมาไม่ตรงกับ checksum ที่ประกาศไว้</td></tr>
+    <tr><td>429</td><td>TOO MANY REQUESTS</td><td>เกิน rate limit; <code>retry-after</code> บอกจำนวนวินาที</td></tr>
+  </tbody>
+</table>
+
+<h4>Server errors</h4>
+<table>
+  <thead><tr><th style="width:9%">รหัส</th><th style="width:26%">วลี</th><th>เมื่อไร</th></tr></thead>
+  <tbody>
+    <tr><td>500</td><td>INTERNAL ERROR</td><td>ความล้มเหลวที่ไม่คาดคิดขณะจัดการคำขอที่ถูกต้อง</td></tr>
+    <tr><td>503</td><td>SERVICE UNAVAILABLE</td><td>ถึงขีด <code>--max-clients</code>; ส่งก่อน session จะเริ่ม</td></tr>
+    <tr><td>505</td><td>VERSION NOT SUPPORTED</td><td>คำขอประกาศเวอร์ชันอื่นที่ไม่ใช่ <code>KUFT/2.0</code></td></tr>
+  </tbody>
+</table>
+
+<div class="callout">
+  <span class="label">422 CHECKSUM MISMATCH — รหัสเดียวที่เป็นของ KUFT โดยแท้</span>
+  <p>ความหมายคือ <em>คำขอถูกต้องตามรูปแบบ และข้อมูลมาถึงครบตามที่ชั้น transport รับรู้
+  แต่ payload ไม่ตรงกับ checksum ที่ผู้ส่งประกาศไว้</em> ไม่มีรหัส HTTP ใดหมายความแบบนั้น
+  และนี่คือความล้มเหลวที่สำคัญที่สุดที่โปรโตคอลนี้ต้องรายงานได้ เพราะมันคือจุดที่
+  ความถูกต้องแบบ end-to-end (R8) ถูกบังคับใช้จริง</p>
+</div>
+
+<h3 class="newpage">4.9 Request และ Response messages ทุกคำสั่ง</h3>
+
+<p>หัวข้อนี้แสดงข้อความจริงที่วิ่งบนสาย ทุกตัวอย่างเป็นสิ่งที่โปรแกรมส่งจริง
+สัญลักษณ์ <code>C -&gt; S</code> คือไคลเอนต์ส่งไปเซิร์ฟเวอร์
+และ <code>S -&gt; C</code> คือเซิร์ฟเวอร์ตอบกลับ</p>
+
+<div class="exchange">
+<h4>HELLO — เปิด session และรับค่าสำหรับการจับคู่</h4>
+<pre><code>C -&gt; S   HELLO * KUFT/2.0
+         &lt;บรรทัดว่าง&gt;
+
+S -&gt; C   KUFT/2.0 200 OK
+         server:      kuft-server/2.0 (win32)
+         methods:     HELLO,AUTH,LIST,STAT,GET,PUT,DELETE,MKDIR,MOVE,QUIT
+         tls:         TLSv1.3
+         auth:        pairing-code
+         salt:        3q2+7wAAAAB/f39/f39/fw==
+         nonce:       kzD1nP0aQ2h5c2VydmVyIG5vbmNlIGhlcmUgMzJC
+         read-only:   false
+         max-upload:  8589934592
+         detail:      send AUTH with your pairing proof
+         &lt;บรรทัดว่าง&gt;</code></pre>
+</div>
+
+<div class="exchange">
+<h4>AUTH — พิสูจน์ตัวตนสองทาง</h4>
+<pre><code>C -&gt; S   AUTH * KUFT/2.0
+         nonce:  Y2xpZW50IG5vbmNlIDMyIG9jdGV0cyBoZXJlLi4u
+         proof:  9Gm1kZ0vQ0hLbXlDbGllbnRQcm9vZkJhc2U2NA==
+         &lt;บรรทัดว่าง&gt;
+
+S -&gt; C   KUFT/2.0 200 OK
+         proof:   XxQ2c2VydmVyUHJvb2ZCYXNlNjRFbmNvZGVkLi4=
+         detail:  authenticated
+         &lt;บรรทัดว่าง&gt;
+
+--- กรณีรหัสผิด ---
+S -&gt; C   KUFT/2.0 401 UNAUTHORIZED
+         detail:  pairing proof did not verify
+         &lt;บรรทัดว่าง&gt;
+         (ตอบหลังหน่วงเวลา 1 วินาที และ session ยังไม่ถูกปิด
+          ผู้ใช้จึงพิมพ์รหัสใหม่ได้)</code></pre>
+</div>
+
+<div class="exchange">
+<h4>LIST — รายการไฟล์</h4>
+<p>Body เป็นแถวคั่นด้วย tab รูปแบบ <code>kind ⇥ size ⇥ modified ⇥ name</code>
+ไดเรกทอรีมี size เป็น <code>-</code></p>
+<pre><code>C -&gt; S   LIST /lecture KUFT/2.0
+         &lt;บรรทัดว่าง&gt;
+
+S -&gt; C   KUFT/2.0 200 OK
+         content-type:    text/tab-separated-values; charset=utf-8
+         content-length:  147
+         count:           3
+         path:            /lecture
+         detail:          3 entries
+         &lt;บรรทัดว่าง&gt;
+         DIR     -       2026-08-24T09:12:03Z    slides
+         FILE    4096    2026-08-24T09:14:55Z    checksums.md
+         FILE    21870   2026-08-25T01:02:41Z    notes.md</code></pre>
+</div>
+
+<div class="exchange">
+<h4>STAT — ข้อมูลไฟล์โดยไม่โอนข้อมูล</h4>
+<pre><code>C -&gt; S   STAT /report.pdf KUFT/2.0
+         &lt;บรรทัดว่าง&gt;
+
+S -&gt; C   KUFT/2.0 200 OK
+         kind:      file
+         size:      8213
+         modified:  2026-08-25T14:31:07Z
+         checksum:  sha256=1f3a9c07be5d21e4a8f0c6b93d47e15a0982f4cbb17d6e3a9042f8c1d5b7e604
+         detail:    metadata for /report.pdf
+         &lt;บรรทัดว่าง&gt;</code></pre>
+</div>
+
+<div class="exchange">
+<h4>GET — ดาวน์โหลดทั้งไฟล์</h4>
+<pre><code>C -&gt; S   GET /report.pdf KUFT/2.0
+         &lt;บรรทัดว่าง&gt;
+
+S -&gt; C   KUFT/2.0 200 OK
+         content-type:     application/octet-stream
+         content-length:   8213
+         size:             8213
+         offset:           0
+         checksum:         sha256=1f3a9c07be5d21e4a8f0c6b93d47e15a...
+         whole-checksum:   sha256=1f3a9c07be5d21e4a8f0c6b93d47e15a...
+         detail:           sending /report.pdf
+         &lt;บรรทัดว่าง&gt;
+         &lt;ข้อมูล 8213 ไบต์พอดี ไม่ถูกตีความใด ๆ&gt;</code></pre>
+<p class="footnote">เมื่อ <code>offset</code> เป็น 0 ค่า <code>checksum</code> และ
+<code>whole-checksum</code> จะเท่ากันเสมอ</p>
+</div>
+
+<div class="exchange">
+<h4>GET พร้อม range — ดาวน์โหลดต่อจากที่ค้างไว้</h4>
+<pre><code>C -&gt; S   GET /big.bin KUFT/2.0
+         range: 1048576
+         &lt;บรรทัดว่าง&gt;
+
+S -&gt; C   KUFT/2.0 206 PARTIAL CONTENT
+         content-type:     application/octet-stream
+         content-length:   3145728
+         size:             4194304
+         offset:           1048576
+         checksum:         sha256=&lt;ของอ็อกเท็ตที่ 1048576 เป็นต้นไป&gt;
+         whole-checksum:   sha256=&lt;ของไฟล์ทั้ง 4194304 ไบต์&gt;
+         detail:           sending /big.bin
+         &lt;บรรทัดว่าง&gt;
+         &lt;ข้อมูล 3145728 ไบต์&gt;
+
+--- กรณี range เกินขนาดไฟล์ ---
+S -&gt; C   KUFT/2.0 416 RANGE NOT SATISFIABLE
+         detail:  range 9999999 outside 0..4194304
+         &lt;บรรทัดว่าง&gt;</code></pre>
+</div>
+
+<div class="exchange">
+<h4>PUT — อัปโหลด</h4>
+<pre><code>C -&gt; S   PUT /outbox/report.md KUFT/2.0
+         content-length:  5120
+         checksum:        sha256=7b1e44d0c9a2f83e5610bd47ca03f9182e...
+         &lt;บรรทัดว่าง&gt;
+         &lt;ข้อมูล 5120 ไบต์&gt;
+
+S -&gt; C   KUFT/2.0 201 CREATED
+         detail:  stored /outbox/report.md (5120 octets)
+         &lt;บรรทัดว่าง&gt;
+
+--- ถ้าไฟล์มีอยู่แล้วและไม่ได้ขอทับ ---
+S -&gt; C   KUFT/2.0 409 CONFLICT
+         detail:  /outbox/report.md exists; resend with overwrite
+         &lt;บรรทัดว่าง&gt;
+         (ตอบ *ก่อน* อ่าน body จึงไม่เปลืองแบนด์วิดท์)
+
+--- ถ้าขอทับด้วย overwrite: true และสำเร็จ ---
+S -&gt; C   KUFT/2.0 200 OK
+         detail:  replaced /outbox/report.md (5120 octets)
+         &lt;บรรทัดว่าง&gt;
+
+--- ถ้าข้อมูลที่รับมาไม่ตรงกับ checksum ---
+S -&gt; C   KUFT/2.0 422 CHECKSUM MISMATCH
+         detail:  expected sha256=7b1e44d0..., got sha256=c04ab918...
+         &lt;บรรทัดว่าง&gt;
+         (ไฟล์ชั่วคราวถูกลบทิ้ง ไฟล์เดิมไม่ถูกแตะต้อง)
+
+--- ถ้า body เกิน --max-upload ---
+S -&gt; C   KUFT/2.0 413 PAYLOAD TOO LARGE
+         detail:  body 9663676416 exceeds limit 8589934592
+         &lt;บรรทัดว่าง&gt;</code></pre>
+</div>
+
+<div class="exchange">
+<h4>DELETE, MKDIR, MOVE</h4>
+<pre><code>C -&gt; S   DELETE /old.txt KUFT/2.0
+S -&gt; C   KUFT/2.0 204 NO CONTENT
+         detail:  removed /old.txt
+
+C -&gt; S   MKDIR /archive KUFT/2.0
+S -&gt; C   KUFT/2.0 201 CREATED
+         detail:  created /archive
+
+C -&gt; S   MOVE /report.pdf KUFT/2.0
+         destination: /archive/report.pdf
+S -&gt; C   KUFT/2.0 200 OK
+         detail:  /report.pdf -&gt; /archive/report.pdf
+
+--- ไดเรกทอรีที่ไม่ว่างจะลบไม่ได้ ---
+S -&gt; C   KUFT/2.0 409 CONFLICT
+         detail:  /lecture is not empty
+
+--- เซิร์ฟเวอร์ที่เปิด --read-only ปฏิเสธทุกคำสั่งที่เขียน ---
+S -&gt; C   KUFT/2.0 403 FORBIDDEN
+         detail:  server is read-only</code></pre>
+</div>
+
+<div class="exchange">
+<h4>QUIT — ปิดอย่างสุภาพ</h4>
+<pre><code>C -&gt; S   QUIT * KUFT/2.0
+         &lt;บรรทัดว่าง&gt;
+
+S -&gt; C   KUFT/2.0 200 OK
+         connection:  close
+         detail:      goodbye
+         &lt;บรรทัดว่าง&gt;</code></pre>
+</div>
+
+<div class="exchange">
+<h4>ตัวอย่างข้อผิดพลาดอื่น</h4>
+<pre><code>--- คำสั่งที่ต้องพิสูจน์ตัวตนก่อน แต่ยังไม่ได้ AUTH ---
+C -&gt; S   GET /secret.txt KUFT/2.0
+S -&gt; C   KUFT/2.0 401 UNAUTHORIZED
+         detail:  authenticate first
+
+--- path ที่พยายามหลุดออกนอกไดเรกทอรีที่แชร์ ---
+C -&gt; S   GET /../../etc/passwd KUFT/2.0
+S -&gt; C   KUFT/2.0 403 FORBIDDEN
+         detail:  path escapes the share
+         (เป็น 403 ไม่ใช่ 404 เสมอ คำตอบจึงไม่เปิดเผยว่า path
+          ข้างนอกนั้นมีอยู่จริงหรือไม่)
+
+--- เวอร์ชันโปรโตคอลไม่ตรงกัน ---
+C -&gt; S   GET /a.txt KUFT/1.0
+S -&gt; C   KUFT/2.0 505 VERSION NOT SUPPORTED
+         detail:  this server speaks KUFT/2.0
+
+--- เกิน rate limit ---
+S -&gt; C   KUFT/2.0 429 TOO MANY REQUESTS
+         retry-after:  7
+         detail:       rate limit exceeded
+
+--- เกินจำนวนไคลเอนต์สูงสุด (ส่งภายใน TLS ก่อน session เริ่ม) ---
+S -&gt; C   KUFT/2.0 503 SERVICE UNAVAILABLE
+         connection:  close
+         detail:      server at capacity (8 clients)</code></pre>
+</div>
+
+<h3 class="newpage">4.10 กลไกจับคู่ (Pairing exchange)</h3>
+
+<p>นี่คือส่วนที่ทำให้การเข้ารหัสมีความหมาย จึงกำหนดไว้อย่างแม่นยำ</p>
+
+<div class="callout">
+  <span class="label">ปัญหา</span>
+  <p>TLS ให้ช่องทางที่เป็นความลับ — แต่ใบรับรองของเซิร์ฟเวอร์เป็นแบบ
+  <strong>self-signed</strong> บนเครือข่ายที่มีแค่แล็ปท็อปสองเครื่อง
+  ไม่มี certificate authority ให้อ้างอิง ใบรับรองเพียงลำพังจึง<em>ไม่พิสูจน์อะไรเลย</em>
+  ผู้โจมตีสร้างขึ้นเองได้ง่ายพอ ๆ กับเรา และ<strong>การเข้ารหัสไปหาคู่สนทนา
+  ที่ไม่รู้ว่าเป็นใคร แทบไม่มีค่า</strong> — มันป้องกันคนที่นั่งฟังเฉย ๆ ได้
+  แต่ไม่ป้องกันคนที่แทรกอยู่ตรงกลางเลย</p>
+</div>
+
+<div class="answer">
+  <span class="label">แนวคิดหลัก</span>
+  <p><strong>ผูก proof ของการพิสูจน์ตัวตนเข้ากับใบรับรองที่ถูกนำเสนอจริง</strong></p>
+</div>
+
+<h4>4.10.1 ค่าที่เกี่ยวข้อง</h4>
+
+<table>
+  <thead><tr><th style="width:14%">สัญลักษณ์</th><th>นิยาม</th></tr></thead>
+  <tbody>
+    <tr><td><code>code</code></td><td>อักขระ 12 ตัวจาก RFC 4648 base32 — <strong>60 บิต</strong> ไม่สนใจตัวพิมพ์ ละเว้นขีด และอ่าน <code>0 1 8 9</code> เป็น <code>O I B G</code> (ชุดอักขระจึงไม่มีเลขที่สับสนกับตัวอักษรเวลาอ่านออกเสียง)</td></tr>
+    <tr><td><code>salt</code></td><td>16 อ็อกเท็ตสุ่ม สร้างครั้งเดียวต่อเซิร์ฟเวอร์และเก็บไว้</td></tr>
+    <tr><td><code>K</code></td><td><code>PBKDF2-HMAC-SHA256(code, salt, 200000, 32)</code></td></tr>
+    <tr><td><code>FP</code></td><td><code>SHA-256(DER(server certificate))</code> — 32 อ็อกเท็ต</td></tr>
+    <tr><td><code>Nc</code>, <code>Ns</code></td><td>32 อ็อกเท็ตสุ่ม <strong>ใหม่ทุก connection</strong></td></tr>
+  </tbody>
+</table>
+
+<h4>4.10.2 การสร้าง proof</h4>
+
+<p>โดยให้ <code>L(x)</code> คือความยาวของ <code>x</code> แบบ big-endian 4 อ็อกเท็ต</p>
+
+<pre><code>proof(label) = HMAC-SHA256( K,
+                 L(label) || label ||
+                 L(FP)    || FP    ||
+                 L(Nc)    || Nc    ||
+                 L(Ns)    || Ns    )
+
+client proof: label = "KUFT/2.0 client-proof"
+server proof: label = "KUFT/2.0 server-proof"</code></pre>
+
+<h4>4.10.3 ลำดับการแลกเปลี่ยน</h4>
+
+<pre><code>                    TLS 1.3 handshake เสร็จสิ้น
+                              |
+C -&gt; S   HELLO * KUFT/2.0
+                              |
+S -&gt; C   KUFT/2.0 200 OK
+         salt:  &lt;base64 salt&gt;
+         nonce: &lt;base64 Ns&gt;
+         auth:  pairing-code
+                              |
+         ผู้ใช้พิมพ์รหัสจับคู่ที่อ่านจากหน้าจอเซิร์ฟเวอร์
+         ไคลเอนต์คำนวณ K แล้วสร้าง proof บน FP ที่ตนเห็น
+                              |
+C -&gt; S   AUTH * KUFT/2.0
+         nonce: &lt;base64 Nc&gt;
+         proof: &lt;base64 proof("KUFT/2.0 client-proof")&gt;
+                              |
+         เซิร์ฟเวอร์ตรวจสอบด้วยการเปรียบเทียบแบบเวลาคงที่
+                              |
+S -&gt; C   KUFT/2.0 200 OK
+         proof: &lt;base64 proof("KUFT/2.0 server-proof")&gt;
+                              |
+         ไคลเอนต์ตรวจ proof ของเซิร์ฟเวอร์ จึงรู้ว่าอีกฝั่งถือรหัสเดียวกัน
+                              |
+                    [ authenticated ]</code></pre>
+
+<h4>4.10.4 การโจมตีแบบดักกลางทางล้มเหลวอย่างไร</h4>
+
+<p>สมมติผู้โจมตีแทรกอยู่ตรงกลาง ปิด TLS ทั้งสองด้านด้วยใบรับรองของตัวเอง
+ซึ่งมีลายนิ้วมือ <code>FP'</code></p>
+
+<ol>
+  <li>ไคลเอนต์คำนวณ proof บน <code>FP'</code> เพราะนั่นคือใบรับรองที่มันถูกนำเสนอ</li>
+  <li>ผู้โจมตีส่ง proof นั้นต่อไปยังเซิร์ฟเวอร์จริง — มันคำนวณใหม่ไม่ได้
+      เพราะการคำนวณใหม่ต้องใช้ <code>K</code></li>
+  <li>เซิร์ฟเวอร์ตรวจ proof เทียบกับ <code>FP</code> ซึ่งเป็นลายนิ้วมือของตัวเอง</li>
+  <li><code>FP ≠ FP'</code> <strong>MAC จึงไม่ตรงกัน และเซิร์ฟเวอร์ตอบ <code>401</code></strong></li>
+</ol>
+
+<p>ผู้โจมตีซ่อมสถานการณ์นี้ไม่ได้ถ้าไม่มี <code>K</code> และหา <code>K</code> ไม่ได้
+ถ้าไม่มีรหัส — <strong>และรหัสนั้นไม่เคยวิ่งผ่านเครือข่ายในรูปแบบใดเลย</strong>
+ไม่ได้เข้ารหัสส่ง ไม่ได้ hash ส่ง ไม่ได้ส่งเลย ผู้ใช้อ่านมันจากหน้าจอ
+proof ที่ถูกดักได้จึงให้เพียงการโจมตีแบบ offline ต่อ 60 บิต
+ที่มี PBKDF2 200,000 รอบขวางอยู่</p>
+
+<h4>4.10.5 องค์ประกอบแต่ละตัวกันการโจมตีอะไร</h4>
+
+<table>
+  <thead><tr><th style="width:32%">องค์ประกอบ</th><th>การโจมตีที่ถูกปิด</th></tr></thead>
+  <tbody>
+    <tr><td><strong>ลายนิ้วมือใบรับรองอยู่ใน MAC</strong></td><td>การแทรกกลางทาง (machine-in-the-middle)</td></tr>
+    <tr><td><strong>nonce ใหม่จากทั้งสองฝั่ง</strong></td><td>proof ที่ถูกดักไว้ใช้ได้กับ connection เดียวและไม่มีวันใช้ได้อีก (replay)</td></tr>
+    <tr><td><strong>label สองอันที่ต่างกัน</strong></td><td>proof ของไคลเอนต์ถูกส่งย้อนกลับเป็น proof ของเซิร์ฟเวอร์ไม่ได้ (reflection)</td></tr>
+    <tr><td><strong>length prefix ในทุกฟิลด์</strong></td><td>ทำให้การเข้ารหัส input เป็นแบบ injective — ไม่มี input สองชุดที่ต่างกันให้ไบต์ชุดเดียวกัน</td></tr>
+    <tr><td><strong>PBKDF2 200,000 รอบ</strong></td><td>การเดารหัสแบบ offline ทำได้ช้าลงมหาศาล</td></tr>
+    <tr><td><strong>การเปรียบเทียบแบบเวลาคงที่</strong></td><td>Timing side channel</td></tr>
+    <tr><td><strong>base32 ที่ไม่มี 0 1 8 9</strong></td><td>ความผิดพลาดของมนุษย์เวลาอ่านรหัสออกเสียง (O กับ 0 สับสนกันไม่ได้)</td></tr>
+  </tbody>
+</table>
+
+<h4>4.10.6 การปักหมุด (Pinning)</h4>
+
+<p>เมื่อการแลกเปลี่ยนสำเร็จครั้งแรก ไคลเอนต์เก็บ <code>FP</code> และ <code>K</code>
+ไว้คู่กับ <code>host:port</code> ใน <code>~/.kuft/known_hosts.json</code>
+การเชื่อมต่อครั้งต่อ ๆ ไปจึงข้ามการใส่รหัสไปเลยและใช้ <code>K</code> เดิม</p>
+
+<p>ถ้า <code>FP</code> ที่เก็บไว้ไม่ตรงกับที่ถูกนำเสนอ ไคลเอนต์
+<strong>ยกเลิกการเชื่อมต่อทันที ไม่มี prompt ให้กดยืนยัน</strong></p>
+
+<div class="callout">
+  <p>นั่นเป็นการตัดสินใจออกแบบโดยเจตนา ไม่ใช่การลืมใส่ ลายนิ้วมือที่เปลี่ยนหมายถึง
+  อย่างใดอย่างหนึ่ง: เซิร์ฟเวอร์ถูกสร้างใหม่ หรือคุณกำลังถูกดักอยู่ —
+  <strong>และกล่องข้อความให้กดยืนยัน คือวิธีที่คนกดผ่านกรณีหลังพอดี</strong>
+  การกู้คืนจึงต้องใช้คำสั่งแยกต่างหากอย่างตั้งใจ คือ <code>kuft.py forget &lt;host&gt;</code>
+  ซึ่งบังคับให้ผู้ใช้ต้องหยุดแล้วคิด</p>
+</div>
+
+<h3>4.11 ความหมายของการโอนย้าย</h3>
+
+<h4>4.11.1 ดาวน์โหลด</h4>
+
+<p><code>GET</code> ตอบกลับด้วย <code>size</code>, <code>checksum</code>
+(ของช่วงข้อมูลที่ส่ง), <code>whole-checksum</code> (ของไฟล์ทั้งไฟล์) และ body</p>
+
+<ol>
+  <li>ไคลเอนต์เขียนข้อมูลลงไฟล์ <code>&lt;ชื่อ&gt;.part</code> และคำนวณ hash
+      <strong>ไปพร้อมกับการเขียน</strong> จึงไม่ต้องอ่านซ้ำ</li>
+  <li>เทียบกับ <code>checksum</code> ของช่วงข้อมูล</li>
+  <li>เมื่อสำเร็จ hash ไฟล์ที่ประกอบเสร็จแล้วเทียบกับ <code>whole-checksum</code></li>
+  <li><strong>ทั้งสองต้องผ่าน</strong> จึงจะเปลี่ยนชื่อ <code>.part</code> เป็นชื่อจริง</li>
+  <li>ถ้าล้มเหลว ไฟล์ <code>.part</code> จะยังอยู่ — ซึ่งเป็นสิ่งที่ทำให้
+      ครั้งถัดไปทำต่อได้ด้วย <code>range</code> แทนที่จะเริ่มใหม่</li>
+</ol>
+
+<h4>4.11.2 อัปโหลด — เป็นแบบ atomic</h4>
+
+<ol>
+  <li>เซิร์ฟเวอร์เขียน body ลงไฟล์ชั่วคราว <strong>ในไดเรกทอรีปลายทาง</strong></li>
+  <li>คำนวณ hash และเทียบกับ <code>checksum</code> ที่ไคลเอนต์ประกาศไว้</li>
+  <li><em>จึงค่อย</em> <code>os.replace()</code> เข้าตำแหน่งจริง</li>
+</ol>
+
+<p>เพราะไฟล์ชั่วคราวอยู่ไดเรกทอรีเดียวกับปลายทาง การเปลี่ยนชื่อจึงอยู่ในระบบไฟล์
+เดียวกันและเป็น atomic และการเปลี่ยนชื่อเกิด<em>หลัง</em> checksum ตรงเท่านั้น ดังนั้น
+<strong>การอัปโหลดที่ขาดตอนหรือถูกดัดแปลง ไม่มีทางทับไฟล์ดี ๆ ได้เลย</strong>
+ไฟล์เวอร์ชันเดิมรอดโดยไม่ถูกแตะต้อง</p>
+
+<p>หากมีเฮดเดอร์ <code>range: N</code> เซิร์ฟเวอร์จะต่อท้ายจากตำแหน่ง <code>N</code>
+โดยมีเงื่อนไขว่าขนาดไฟล์ปัจจุบันต้องเท่ากับ <code>N</code> พอดี มิฉะนั้นตอบ
+<code>416</code></p>
+
+<h3>4.12 State machine ของ session</h3>
+
+<pre><code>                 TLS 1.3 handshake
+                        |
+                        v
+                  [ connected ]
+                        |  HELLO
+                        v
+                   [ greeted ]
+                        |  AUTH พร้อม proof ที่ถูกต้อง
+                        v
+                 [ authenticated ] &lt;--+
+                        |             | LIST STAT GET PUT
+                        |  QUIT       | DELETE MKDIR MOVE
+                        v             |
+                    [ closed ]  ------+</code></pre>
+
+<ul>
+  <li>คำสั่งอื่นใดนอกจาก <code>HELLO</code> หรือ <code>AUTH</code>
+      ในสถานะ <code>connected</code> หรือ <code>greeted</code> → <code>401</code></li>
+  <li><code>AUTH</code> ก่อน <code>HELLO</code> → <code>400</code>
+      เพราะยังไม่มี <code>Ns</code> ให้ผูก proof เข้าด้วย</li>
+  <li>ข้อผิดพลาด framing ระดับ <code>400</code> <strong>ปิด connection</strong>
+      เพราะเมื่อสตรีมหลุดจากการซิงก์แล้ว ไม่มีวิธีหาขอบเขตข้อความถัดไปได้อีก</li>
+  <li><code>QUIT</code> ถูกตอบด้วย <code>200</code> พร้อม <code>connection: close</code></li>
+</ul>
+
+<h3>4.13 การกักขอบเขต (Jail)</h3>
+
+<p>ทุก target ถูก resolve เทียบกับรากที่แชร์ แล้วจึงตรวจว่าเป็นรากนั้นเอง
+หรือเป็นลูกหลานของมัน การ resolve จะยุบ <code>..</code> และ
+<strong>ตาม symlink ก่อนการตรวจ</strong> ดังนั้น symlink ที่ชี้ออกนอกไดเรกทอรีที่แชร์
+จึงถูกปฏิเสธเช่นเดียวกับ <code>../</code> ที่เขียนตรง ๆ</p>
+
+<p>ความล้มเหลวตอบเป็น <code>403</code> เสมอ ไม่ใช่ <code>404</code>
+และคำตอบไม่เปิดเผยว่า path ข้างนอกนั้นมีอยู่จริงหรือไม่</p>
+
+<!-- ═══════════════════════ 5 ═══════════════════════ -->
+<h2>5. สรุปคำตอบ</h2>
+
+<table>
+  <thead><tr><th style="width:24%">คำถาม</th><th>คำตอบ</th></tr></thead>
+  <tbody>
+    <tr>
+      <td><strong>เป็นโปรแกรมอะไร ใช้ทำอะไร</strong></td>
+      <td>โปรแกรมรับส่งไฟล์แบบ client/server ที่ย้ายไฟล์โดยตรงระหว่างสองเครื่อง
+      บนเครือข่ายเดียวกัน โดยเข้ารหัสและตรวจสอบความถูกต้อง ไม่ผ่านบุคคลที่สาม
+      ไม่ต้องมีบัญชี และไม่ต้องตั้งค่าอะไรนอกจากรหัสจับคู่หนึ่งรหัส</td>
+    </tr>
+    <tr>
+      <td><strong>มีคุณลักษณะอย่างไร</strong></td>
+      <td>Client/server, session แบบมีสถานะและอายุยาว, ข้อมูลสองทาง,
+      ขนาดไฟล์ไม่จำกัด, <strong>ทนต่อการสูญหายเป็นศูนย์</strong> แต่
+      <strong>ทนต่อความหน่วงได้สูงมาก</strong>, ต้องการความปลอดภัยเต็มรูปแบบ,
+      ผู้ใช้พร้อมกันน้อย (8 ราย), หนึ่ง thread ต่อหนึ่ง connection
+      และใช้หน่วยความจำคงที่ด้วยการสตรีมทีละ 256 KiB</td>
+    </tr>
+    <tr>
+      <td><strong>ใช้ service model ใด เพราะอะไร</strong></td>
+      <td><strong>TCP</strong> — connection-oriented, เชื่อถือได้, เรียงลำดับ, ไม่ซ้ำ,
+      เป็นสตรีมไบต์ พร้อม flow control และ congestion control ความต้องการ R1–R6
+      ตรงกับการรับประกันของ TCP พอดี การสร้างสิ่งเหล่านี้บน UDP ก็คือการเขียน TCP
+      ใหม่ให้แย่ลง <strong>และเหตุผลชี้ขาดคือ TLS 1.3 มีให้ใช้บน TCP ในไลบรารีมาตรฐาน
+      ขณะที่ DTLS ไม่มี</strong> การเลือก UDP จึงเท่ากับต้องเขียนวิทยาการรหัสลับเอง
+      หรือไม่มีการเข้ารหัสเลย ส่วนสิ่งที่ TCP ขาดถูกเติมที่ชั้นแอปพลิเคชันทุกจุด
+      และสิ่งเดียวที่มันขาดจริง ๆ คือการไม่รับประกันเรื่องเวลา ซึ่งไม่เสียหายอะไรเลย
+      เพราะในการรับส่งไฟล์ ไบต์ที่มาช้ามีค่าเท่ากับไบต์ที่มาตรงเวลาทุกประการ</td>
+    </tr>
+    <tr>
+      <td><strong>ออกแบบโปรโตคอลอย่างไร</strong></td>
+      <td>ส่วนหัวเป็น US-ASCII ที่จบด้วยบรรทัดว่าง บวก <code>content-length</code>
+      ที่บังคับมี — framing จึงไม่ขึ้นกับเนื้อหาของ body; target ถูก percent-encode —
+      request line จึงมีสาม token เสมอ; เก้าคำสั่งที่แต่ละอันตรงกับปฏิบัติการบน
+      ระบบไฟล์หนึ่งอย่าง; รหัสสถานะตามคลาสของ HTTP บวก
+      <code>422 CHECKSUM MISMATCH</code>; และ proof ของการจับคู่ที่ผูกกับช่องทาง
+      โดยใส่ลายนิ้วมือใบรับรองเข้าไปใน HMAC ซึ่งเป็นสิ่งที่ทำให้การเข้ารหัสมีความหมาย</td>
+    </tr>
+  </tbody>
+</table>
+
+</body>
+</html>
